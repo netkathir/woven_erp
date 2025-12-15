@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Branch;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -86,7 +87,16 @@ class CreateSuperAdmin extends Command
                 'mobile' => '0000000000', // Default mobile
             ]);
 
-            $this->info("✅ Super Admin user created successfully!");
+            // Assign Super Admin to Main Branch (default branch)
+            $mainBranch = Branch::where('code', 'MB001')->first();
+            if ($mainBranch) {
+                $superAdmin->branches()->sync([$mainBranch->id]);
+                $this->info("✅ Super Admin user created successfully!");
+                $this->info("✅ Assigned to Main Branch: {$mainBranch->name}");
+            } else {
+                $this->info("✅ Super Admin user created successfully!");
+                $this->warn("⚠️  Main Branch (MB001) not found. Please run BranchSeeder first.");
+            }
 
             DB::commit();
 

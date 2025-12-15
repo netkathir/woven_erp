@@ -80,27 +80,60 @@ class OtpController extends Controller
         // Clear OTP session
         session()->forget('otp_user_id');
 
-        // Handle branch selection for non-Super Admin users
-        if (!$user->isSuperAdmin()) {
-            $branches = $user->branches()->where('is_active', true)->get();
+        // Reload user with role relationship to ensure isSuperAdmin() works correctly
+        $user->load('role');
+
+        // Handle branch selection for all users (including Super Admin)
+        // Super Admin should have Main Branch assigned, but can access all branches
+        $branches = $user->branches()->where('is_active', true)->get();
+        
+        if ($branches->count() === 0) {
+            // If no branches assigned, try to get Main Branch for Super Admin
+            if ($user->isSuperAdmin()) {
+                $mainBranch = \App\Models\Branch::where('code', 'MB001')->where('is_active', true)->first();
+                if ($mainBranch) {
+                    // Assign Main Branch to Super Admin
+                    $user->branches()->sync([$mainBranch->id]);
+                    $branches = collect([$mainBranch]);
+                } else {
+                    // Fallback: get first active branch
+                    $defaultBranch = \App\Models\Branch::where('is_active', true)->orderBy('id')->first();
+                    if ($defaultBranch) {
+                        $user->branches()->sync([$defaultBranch->id]);
+                        $branches = collect([$defaultBranch]);
+                    }
+                }
+            }
             
-            if ($branches->count() === 0) {
+            // If still no branches and not Super Admin, show error
+            if ($branches->count() === 0 && !$user->isSuperAdmin()) {
                 Auth::logout();
                 return redirect()->route('login')->with('error', 'No active branches assigned to your account. Please contact administrator.');
             }
+        }
+        
+        // Set active branch (for Super Admin, prefer Main Branch if assigned)
+        if ($branches->count() > 0) {
+            $defaultBranch = $branches->firstWhere('code', 'MB001') ?? $branches->first();
+            session(['active_branch_id' => $defaultBranch->id]);
+            session(['active_branch_name' => $defaultBranch->name]);
             
             if ($branches->count() === 1) {
-                // Auto-select the single branch
-                session(['active_branch_id' => $branches->first()->id]);
-                session(['active_branch_name' => $branches->first()->name]);
+                // Single branch - auto-select
                 return redirect()->route('dashboard')->with('success', 'Login successful!');
             } else {
                 // Multiple branches - redirect to branch selection
                 return redirect()->route('branch.select')->with('success', 'Please select a branch to continue.');
             }
+        } elseif ($user->isSuperAdmin()) {
+            // Super Admin fallback: get first active branch in system
+            $defaultBranch = \App\Models\Branch::where('is_active', true)->orderBy('id')->first();
+            if ($defaultBranch) {
+                session(['active_branch_id' => $defaultBranch->id]);
+                session(['active_branch_name' => $defaultBranch->name]);
+            }
         }
 
-        // Super Admin - no branch selection needed
         return redirect()->route('dashboard')->with('success', 'Login successful!');
     }
 }

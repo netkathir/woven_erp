@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Branch;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -54,8 +55,14 @@ class SuperAdminSeeder extends Seeder
             $userData
         );
 
-        // Ensure Super Admin has no branch assignments
-        $user->branches()->detach();
+        // Assign Super Admin to Main Branch (default branch)
+        $mainBranch = Branch::where('code', 'MB001')->first();
+        if ($mainBranch) {
+            $user->branches()->sync([$mainBranch->id]);
+            $this->command->info('   Assigned to Main Branch: ' . $mainBranch->name);
+        } else {
+            $this->command->warn('   Main Branch (MB001) not found. Please run BranchSeeder first.');
+        }
         
         // Assign all permissions to Super Admin role (Super Admin should have all permissions)
         $allPermissions = \App\Models\Permission::where('is_active', true)->get();
