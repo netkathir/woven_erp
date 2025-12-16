@@ -257,12 +257,20 @@
             background: #2c3e50;
             padding: 15px 30px;
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
             z-index: 100;
+        }
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 22px;
+            cursor: pointer;
         }
         .user-info {
             display: flex;
@@ -327,6 +335,11 @@
             }
             .main-content {
                 margin-left: 0;
+            }
+            .mobile-menu-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
             }
         }
     </style>
@@ -416,6 +429,9 @@
         <div class="main-content" id="mainContent">
             <!-- Top Header -->
             <header class="top-header">
+                <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()" aria-label="Toggle menu">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <div class="user-info" style="display: flex; align-items: center; gap: 15px;">
                     
                     @if(auth()->user()->role)
@@ -518,11 +534,13 @@
             if (isMobile) {
                 sidebar.classList.add('closed');
                 sidebar.classList.remove('collapsed');
+                sidebar.classList.remove('open');
                 mainContent.classList.add('expanded');
                 mainContent.classList.remove('sidebar-collapsed');
             } else {
                 // On desktop widths always show sidebar (unless user manually collapses it)
                 sidebar.classList.remove('closed');
+                sidebar.classList.remove('open');
                 mainContent.classList.remove('expanded');
             }
         }
@@ -530,6 +548,28 @@
         // Check on load and resize
         window.addEventListener('load', handleMobileSidebar);
         window.addEventListener('resize', handleMobileSidebar);
+
+        // Mobile sidebar toggle (open/close drawer)
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const isMobile = window.innerWidth <= 768;
+
+            if (!isMobile) {
+                toggleSidebar();
+                return;
+            }
+
+            if (sidebar.classList.contains('closed')) {
+                sidebar.classList.remove('closed');
+                sidebar.classList.add('open');
+                mainContent.classList.remove('expanded');
+            } else {
+                sidebar.classList.add('closed');
+                sidebar.classList.remove('open');
+                mainContent.classList.add('expanded');
+            }
+        }
 
 
         // Toggle Settings menu
