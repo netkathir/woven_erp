@@ -25,6 +25,11 @@ class MenuFormSeeder extends Seeder
             ['name' => 'Settings', 'is_active' => true]
         );
 
+        $masters = Menu::firstOrCreate(
+            ['code' => 'masters'],
+            ['name' => 'Masters', 'is_active' => true]
+        );
+
         // Helper to create/update forms
         $makeForm = function (Menu $menu, ?Submenu $submenu, string $name, string $code, ?string $routeName = null) {
             $form = Form::firstOrNew(['code' => $code]);
@@ -43,6 +48,13 @@ class MenuFormSeeder extends Seeder
         $makeForm($systemAdminMenu, null, 'Roles',           'roles_form',           'roles.index');
         $makeForm($systemAdminMenu, null, 'Permissions',     'permissions_form',     'permissions.index');
         $makeForm($systemAdminMenu, null, 'Role Permissions', 'role_permissions_form', 'role-permissions.select');
+
+        // Masters (Masters group)
+        $makeForm($masters, null, 'Suppliers', 'suppliers_form', 'suppliers.index');
+        $makeForm($masters, null, 'Raw Materials', 'raw_materials_form', 'raw-materials.index');
+        $makeForm($masters, null, 'Products', 'products_form', 'products.index');
+        $makeForm($masters, null, 'Customers', 'customers_form', 'customers.index');
+        $makeForm($masters, null, 'Employees', 'employees_form', 'employees.index');
 
         // Settings / Company (Settings group)
         $makeForm($settings, null, 'Company Information', 'company_information_form', 'company-information.index');

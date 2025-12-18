@@ -76,4 +76,39 @@ Route::middleware(['auth'])->group(function () {
     
     // Settings Routes (Super Admin only)
     Route::resource('company-information', App\Http\Controllers\CompanyInformationController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
+    
+    // Masters Routes
+    Route::resource('suppliers', App\Http\Controllers\SupplierController::class);
+    Route::resource('raw-materials', App\Http\Controllers\RawMaterialController::class);
+    Route::resource('products', App\Http\Controllers\ProductController::class);
+    Route::resource('customers', App\Http\Controllers\CustomerController::class);
+    Route::resource('employees', App\Http\Controllers\EmployeeController::class);
+    
+    // Purchase Orders
+    Route::resource('purchase-orders', App\Http\Controllers\PurchaseOrderController::class);
+
+    // Material Inwards
+    Route::resource('material-inwards', App\Http\Controllers\MaterialInwardController::class);
+
+    // Work Orders
+    Route::resource('work-orders', App\Http\Controllers\WorkOrderController::class);
+
+    // Productions
+    Route::resource('productions', App\Http\Controllers\ProductionController::class);
+    
+    // Sales Invoices
+    Route::resource('sales-invoices', App\Http\Controllers\SalesInvoiceController::class);
+    
+    // Daily Expenses
+    Route::resource('daily-expenses', App\Http\Controllers\DailyExpenseController::class);
+    
+    // Stock Transactions
+    Route::resource('stock-transactions', App\Http\Controllers\StockTransactionController::class);
+    
+    // CRM - Notes
+    Route::resource('notes', App\Http\Controllers\NoteController::class);
+    Route::delete('notes/attachments/{attachment}', [App\Http\Controllers\NoteController::class, 'deleteAttachment'])->name('notes.attachments.destroy');
+    
+    // CRM - Tasks
+    Route::resource('tasks', App\Http\Controllers\TaskController::class);
 });

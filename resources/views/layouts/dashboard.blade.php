@@ -226,6 +226,11 @@
             padding: 14px 0;
             gap: 0;
         }
+        /* Additional padding for sub-menu items */
+        .menu-sub-items .menu-item,
+        .menu-submenu .menu-item {
+            padding-left: 40px;
+        }
         /* In collapsed mode: show only the section icon, hide text and arrow */
         .sidebar.collapsed .menu-item-header span {
             display: none;
@@ -455,6 +460,91 @@
                     </div>
                 @endif
 
+                {{-- Masters Menu --}}
+                <div class="menu-item-header" onclick="toggleMastersMenu()" id="mastersHeader" style="margin-top: 10px;" title="Masters">
+                    <i class="fas fa-database menu-header-icon"></i>
+                    <span>Masters</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <div class="menu-sub-items" id="mastersMenu">
+                    <a href="{{ route('suppliers.index') }}" class="menu-item" title="Suppliers">
+                        <i class="fas fa-truck"></i>
+                        <span>Suppliers</span>
+                    </a>
+                    <a href="{{ route('raw-materials.index') }}" class="menu-item" title="Raw Materials">
+                        <i class="fas fa-boxes"></i>
+                        <span>Raw Materials</span>
+                    </a>
+                    <a href="{{ route('products.index') }}" class="menu-item" title="Products">
+                        <i class="fas fa-cube"></i>
+                        <span>Products</span>
+                    </a>
+                    <a href="{{ route('customers.index') }}" class="menu-item" title="Customers">
+                        <i class="fas fa-users"></i>
+                        <span>Customers</span>
+                    </a>
+                    <a href="{{ route('employees.index') }}" class="menu-item" title="Employees">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Employees</span>
+                    </a>
+                </div>
+
+                {{-- Transaction Forms (Direct Menu Items) --}}
+                <a href="{{ route('purchase-orders.index') }}" class="menu-item" title="Purchase Orders" style="margin-top: 10px;">
+                    <i class="fas fa-file-invoice"></i>
+                    <span>Purchase Orders</span>
+                </a>
+                <a href="{{ route('material-inwards.index') }}" class="menu-item" title="Material Inwards">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>Material Inwards</span>
+                </a>
+                <a href="{{ route('sales-invoices.index') }}" class="menu-item" title="Sales Invoices">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Sales Invoices</span>
+                </a>
+                <a href="{{ route('daily-expenses.index') }}" class="menu-item" title="Daily Expenses">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Daily Expenses</span>
+                </a>
+                <a href="{{ route('stock-transactions.index') }}" class="menu-item" title="Stock Transactions">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Stock Transactions</span>
+                </a>
+
+                {{-- Productions Menu --}}
+                <div class="menu-item-header" onclick="toggleProductionsMenu()" id="productionsHeader" style="margin-top: 10px;" title="Productions">
+                    <i class="fas fa-industry menu-header-icon"></i>
+                    <span>Productions</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <div class="menu-sub-items" id="productionsMenu">
+                    <a href="{{ route('work-orders.index') }}" class="menu-item" title="Work Orders">
+                        <i class="fas fa-tasks"></i>
+                        <span>Work Orders</span>
+                    </a>
+                    <a href="{{ route('productions.index') }}" class="menu-item" title="Productions">
+                        <i class="fas fa-industry"></i>
+                        <span>Productions</span>
+                    </a>
+                </div>
+
+                {{-- CRM Menu --}}
+                <div class="menu-item-header" onclick="toggleCrmMenu()" id="crmHeader" style="margin-top: 10px;" title="CRM">
+                    <i class="fas fa-users menu-header-icon"></i>
+                    <span>CRM</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <div class="menu-submenu" id="crmMenu" style="display: none;">
+                    <a href="{{ route('notes.index') }}" class="menu-item" title="Notes">
+                        <i class="fas fa-sticky-note"></i>
+                        <span>Notes</span>
+                    </a>
+                    <a href="{{ route('tasks.index') }}" class="menu-item" title="Tasks">
+                        <i class="fas fa-tasks"></i>
+                        <span>Tasks</span>
+                    </a>
+                </div>
+
                 {{-- Settings Menu (Super Admin only) --}}
                 @if(auth()->user()->isSuperAdmin())
                      <div class="menu-item-header" onclick="toggleSettingsMenu()" id="settingsHeader" style="margin-top: 10px;" title="Settings">
@@ -646,6 +736,20 @@
         window.addEventListener('resize', handleMobileSidebar);
 
 
+        // Toggle Masters menu
+        function toggleMastersMenu() {
+            const mastersMenu = document.getElementById('mastersMenu');
+            const mastersHeader = document.getElementById('mastersHeader');
+            
+            if (mastersMenu && mastersHeader) {
+                mastersMenu.classList.toggle('collapsed');
+                mastersHeader.classList.toggle('collapsed');
+                
+                // Save state to localStorage
+                localStorage.setItem('mastersMenuCollapsed', mastersMenu.classList.contains('collapsed'));
+            }
+        }
+
         // Toggle Settings menu
         function toggleSettingsMenu() {
             const settingsMenu = document.getElementById('settingsMenu');
@@ -674,6 +778,54 @@
             }
         }
 
+        // Toggle Transactions menu
+        function toggleCrmMenu() {
+            const menu = document.getElementById('crmMenu');
+            const header = document.getElementById('crmHeader');
+            const arrow = header.querySelector('.arrow');
+            if (menu.style.display === 'none' || menu.style.display === '') {
+                menu.style.display = 'block';
+                arrow.classList.remove('fa-chevron-down');
+                arrow.classList.add('fa-chevron-up');
+                localStorage.setItem('crmMenuOpen', 'true');
+            } else {
+                menu.style.display = 'none';
+                arrow.classList.remove('fa-chevron-up');
+                arrow.classList.add('fa-chevron-down');
+                localStorage.setItem('crmMenuOpen', 'false');
+            }
+        }
+
+        function toggleProductionsMenu() {
+            const productionsMenu = document.getElementById('productionsMenu');
+            const productionsHeader = document.getElementById('productionsHeader');
+            
+            if (productionsMenu && productionsHeader) {
+                productionsMenu.classList.toggle('collapsed');
+                productionsHeader.classList.toggle('collapsed');
+                
+                // Save state to localStorage
+                localStorage.setItem('productionsMenuCollapsed', productionsMenu.classList.contains('collapsed'));
+            }
+        }
+
+        // Initialize CRM menu state on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const crmMenuOpen = localStorage.getItem('crmMenuOpen');
+            const crmMenu = document.getElementById('crmMenu');
+            const crmHeader = document.getElementById('crmHeader');
+            if (crmMenu && crmHeader) {
+                if (crmMenuOpen === 'true') {
+                    crmMenu.style.display = 'block';
+                    const arrow = crmHeader.querySelector('.arrow');
+                    if (arrow) {
+                        arrow.classList.remove('fa-chevron-down');
+                        arrow.classList.add('fa-chevron-up');
+                    }
+                }
+            }
+        });
+
         // Initialize all collapsible menus state on page load
         document.addEventListener('DOMContentLoaded', function() {
 
@@ -696,6 +848,28 @@
                 if (systemAdminMenu && systemAdminHeader) {
                     systemAdminMenu.classList.add('collapsed');
                     systemAdminHeader.classList.add('collapsed');
+                }
+            }
+
+            // Masters menu
+            const mastersSavedState = localStorage.getItem('mastersMenuCollapsed');
+            if (mastersSavedState === 'true') {
+                const mastersMenu = document.getElementById('mastersMenu');
+                const mastersHeader = document.getElementById('mastersHeader');
+                if (mastersMenu && mastersHeader) {
+                    mastersMenu.classList.add('collapsed');
+                    mastersHeader.classList.add('collapsed');
+                }
+            }
+
+            // Productions menu
+            const productionsSavedState = localStorage.getItem('productionsMenuCollapsed');
+            if (productionsSavedState === 'true') {
+                const productionsMenu = document.getElementById('productionsMenu');
+                const productionsHeader = document.getElementById('productionsHeader');
+                if (productionsMenu && productionsHeader) {
+                    productionsMenu.classList.add('collapsed');
+                    productionsHeader.classList.add('collapsed');
                 }
             }
 
