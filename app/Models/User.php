@@ -188,6 +188,7 @@ class User extends Authenticatable
     /**
      * Get form name from route name for permission checking.
      * Helper method for views to determine form name from route.
+     * This uses the same mapping as PermissionSyncService for consistency.
      *
      * @param string $routeName Route name (e.g., 'suppliers.index', 'raw-materials.create')
      * @return string Form name (e.g., 'suppliers', 'raw-materials')
@@ -197,6 +198,7 @@ class User extends Authenticatable
         $formName = preg_replace('/\.(index|create|edit|show|store|update|destroy)$/', '', $routeName);
         
         // Handle special route name to form name mappings
+        // Keep this in sync with PermissionSyncService::$routeToFormMap
         $routeToFormMap = [
             'organizations' => 'organizations',
             'users' => 'users',

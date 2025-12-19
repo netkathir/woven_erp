@@ -123,6 +123,7 @@ class RolePermissionController extends Controller
         ];
         
         // Load all permissions from permissions table grouped by module
+        // Admin and Super Admin should see ALL permissions (including inactive ones for management)
         $permissions = Permission::where('is_active', true)
             ->orderBy('form_name')
             ->get()
