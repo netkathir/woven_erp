@@ -537,6 +537,64 @@
                 </div>
                 @endif
 
+                {{-- Petty Cash Master Menu --}}
+                @php
+                    $hasPettyCashMasterAccess = $user->canAccessPage('petty-cash.index');
+                @endphp
+                @if($hasPettyCashMasterAccess)
+                <div class="menu-item-header" onclick="togglePettyCashMasterMenu()" id="pettyCashMasterHeader" style="margin-top: 10px;" title="Petty Cash Master">
+                    <i class="fas fa-wallet menu-header-icon"></i>
+                    <span>Petty Cash Master</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <div class="menu-sub-items" id="pettyCashMasterMenu">
+                        @if($user->canAccessPage('petty-cash.index'))
+                    <a href="{{ route('petty-cash.index') }}" class="menu-item" title="Petty Cash Form">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Petty Cash Form</span>
+                    </a>
+                        @endif
+                        @if($user->canAccessPage('petty-cash.index'))
+                    <a href="{{ route('petty-cash.report') }}" class="menu-item" title="Petty Cash Report">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Petty Cash Report</span>
+                    </a>
+                        @endif
+                </div>
+                @endif
+
+                {{-- Attendance Menu --}}
+                @php
+                    $hasAttendanceAccess = $user->canAccessPage('attendances.index');
+                @endphp
+                @if($hasAttendanceAccess)
+                <div class="menu-item-header" onclick="toggleAttendanceMenu()" id="attendanceHeader" style="margin-top: 10px;" title="Attendance">
+                    <i class="fas fa-calendar-check menu-header-icon"></i>
+                    <span>Attendance</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <div class="menu-sub-items" id="attendanceMenu">
+                        @if($user->canAccessPage('attendances.index'))
+                    <a href="{{ route('attendances.index') }}" class="menu-item" title="Attendance Form">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Attendance Form</span>
+                    </a>
+                        @endif
+                        @if($user->canAccessPage('leaves.index'))
+                    <a href="{{ route('leaves.index') }}" class="menu-item" title="Leave Form">
+                        <i class="fas fa-calendar-times"></i>
+                        <span>Leave Form</span>
+                    </a>
+                        @endif
+                        @if($user->canAccessPage('attendances.index'))
+                    <a href="{{ route('attendances.report') }}" class="menu-item" title="Attendance Report">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Attendance Report</span>
+                    </a>
+                        @endif
+                </div>
+                @endif
+
                 {{-- Transaction Forms (Direct Menu Items) --}}
                 @if($user->canAccessPage('purchase-orders.index'))
                 <a href="{{ route('purchase-orders.index') }}" class="menu-item" title="Purchase Orders" style="margin-top: 10px;">
@@ -892,6 +950,34 @@
             }
         }
 
+        // Toggle Petty Cash Master menu
+        function togglePettyCashMasterMenu() {
+            const pettyCashMasterMenu = document.getElementById('pettyCashMasterMenu');
+            const pettyCashMasterHeader = document.getElementById('pettyCashMasterHeader');
+            
+            if (pettyCashMasterMenu && pettyCashMasterHeader) {
+                pettyCashMasterMenu.classList.toggle('collapsed');
+                pettyCashMasterHeader.classList.toggle('collapsed');
+                
+                // Save state to localStorage
+                localStorage.setItem('pettyCashMasterMenuCollapsed', pettyCashMasterMenu.classList.contains('collapsed'));
+            }
+        }
+
+        // Toggle Attendance menu
+        function toggleAttendanceMenu() {
+            const attendanceMenu = document.getElementById('attendanceMenu');
+            const attendanceHeader = document.getElementById('attendanceHeader');
+            
+            if (attendanceMenu && attendanceHeader) {
+                attendanceMenu.classList.toggle('collapsed');
+                attendanceHeader.classList.toggle('collapsed');
+                
+                // Save state to localStorage
+                localStorage.setItem('attendanceMenuCollapsed', attendanceMenu.classList.contains('collapsed'));
+            }
+        }
+
         // Initialize CRM menu state on page load
         document.addEventListener('DOMContentLoaded', function() {
             const crmMenuOpen = localStorage.getItem('crmMenuOpen');
@@ -953,6 +1039,28 @@
                 if (productionsMenu && productionsHeader) {
                     productionsMenu.classList.add('collapsed');
                     productionsHeader.classList.add('collapsed');
+                }
+            }
+
+            // Petty Cash Master menu
+            const pettyCashMasterSavedState = localStorage.getItem('pettyCashMasterMenuCollapsed');
+            if (pettyCashMasterSavedState === 'true') {
+                const pettyCashMasterMenu = document.getElementById('pettyCashMasterMenu');
+                const pettyCashMasterHeader = document.getElementById('pettyCashMasterHeader');
+                if (pettyCashMasterMenu && pettyCashMasterHeader) {
+                    pettyCashMasterMenu.classList.add('collapsed');
+                    pettyCashMasterHeader.classList.add('collapsed');
+                }
+            }
+
+            // Attendance menu
+            const attendanceSavedState = localStorage.getItem('attendanceMenuCollapsed');
+            if (attendanceSavedState === 'true') {
+                const attendanceMenu = document.getElementById('attendanceMenu');
+                const attendanceHeader = document.getElementById('attendanceHeader');
+                if (attendanceMenu && attendanceHeader) {
+                    attendanceMenu.classList.add('collapsed');
+                    attendanceHeader.classList.add('collapsed');
                 }
             }
 

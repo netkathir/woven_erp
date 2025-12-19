@@ -147,6 +147,26 @@ Route::middleware(['auth'])->group(function () {
     // Daily Expenses
     Route::resource('daily-expenses', App\Http\Controllers\DailyExpenseController::class);
     
+    // Petty Cash
+    Route::resource('petty-cash', App\Http\Controllers\PettyCashController::class);
+    Route::get('petty-cash-report', [App\Http\Controllers\PettyCashController::class, 'report'])->name('petty-cash.report');
+    Route::get('petty-cash-export/pdf', [App\Http\Controllers\PettyCashController::class, 'exportPdf'])->name('petty-cash.export.pdf');
+    Route::get('petty-cash-export/excel', [App\Http\Controllers\PettyCashController::class, 'exportExcel'])->name('petty-cash.export.excel');
+    
+    // Attendance
+    Route::get('attendances', [App\Http\Controllers\AttendanceController::class, 'index'])->name('attendances.index');
+    Route::get('attendances/create', [App\Http\Controllers\AttendanceController::class, 'create'])->name('attendances.create');
+    Route::post('attendances', [App\Http\Controllers\AttendanceController::class, 'store'])->name('attendances.store');
+    Route::get('attendances/{date}/edit', [App\Http\Controllers\AttendanceController::class, 'edit'])->name('attendances.edit');
+    Route::put('attendances/{date}', [App\Http\Controllers\AttendanceController::class, 'update'])->name('attendances.update');
+    Route::delete('attendances/{date}', [App\Http\Controllers\AttendanceController::class, 'destroy'])->name('attendances.destroy');
+    Route::get('attendance-report', [App\Http\Controllers\AttendanceController::class, 'report'])->name('attendances.report');
+    Route::get('attendance-export/pdf', [App\Http\Controllers\AttendanceController::class, 'exportPdf'])->name('attendances.export.pdf');
+    Route::get('attendance-export/excel', [App\Http\Controllers\AttendanceController::class, 'exportExcel'])->name('attendances.export.excel');
+    
+    // Leaves
+    Route::resource('leaves', App\Http\Controllers\LeaveController::class);
+    
     // Stock Transactions
     Route::resource('stock-transactions', App\Http\Controllers\StockTransactionController::class);
     

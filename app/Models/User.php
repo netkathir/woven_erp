@@ -211,6 +211,7 @@ class User extends Authenticatable
             'material-inwards' => 'material-inwards',
             'sales-invoices' => 'sales-invoices',
             'daily-expenses' => 'daily-expenses',
+            'petty-cash' => 'petty-cash',
             'stock-transactions' => 'stock-transactions',
             'work-orders' => 'work-orders',
             'productions' => 'productions',
@@ -220,6 +221,8 @@ class User extends Authenticatable
             'products' => 'products',
             'customers' => 'customers',
             'employees' => 'employees',
+            'attendances' => 'attendances',
+            'leaves' => 'leaves',
         ];
         
         if (isset($routeToFormMap[$formName])) {
