@@ -620,11 +620,36 @@
                     <span>Daily Expenses</span>
                 </a>
                 @endif
-                @if($user->canAccessPage('stock-transactions.index'))
-                <a href="{{ route('stock-transactions.index') }}" class="menu-item" title="Stock Transactions">
-                    <i class="fas fa-exchange-alt"></i>
-                    <span>Stock Transactions</span>
-                </a>
+                {{-- Stock Menu --}}
+                @php
+                    $hasStockAccess = $user->canAccessPage('stock-transactions.index');
+                @endphp
+                @if($hasStockAccess)
+                <div class="menu-item-header" onclick="toggleStockMenu()" id="stockHeader" style="margin-top: 10px;" title="Stock">
+                    <i class="fas fa-boxes menu-header-icon"></i>
+                    <span>Stock</span>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <div class="menu-sub-items" id="stockMenu">
+                        @if($user->canAccessPage('raw-materials.index'))
+                    <a href="{{ route('stock.raw-material') }}" class="menu-item" title="Raw Material Stock">
+                        <i class="fas fa-boxes"></i>
+                        <span>Raw Material Stock</span>
+                    </a>
+                        @endif
+                        @if($user->canAccessPage('products.index'))
+                    <a href="{{ route('stock.finished-goods') }}" class="menu-item" title="Finished Goods Stock">
+                        <i class="fas fa-warehouse"></i>
+                        <span>Finished Goods Stock</span>
+                    </a>
+                        @endif
+                        @if($user->canAccessPage('stock-transactions.index'))
+                    <a href="{{ route('stock-transactions.index') }}" class="menu-item" title="Stock Transactions">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>Stock Transactions</span>
+                    </a>
+                        @endif
+                </div>
                 @endif
 
                 {{-- Productions Menu --}}
@@ -978,6 +1003,20 @@
             }
         }
 
+        // Toggle Stock menu
+        function toggleStockMenu() {
+            const stockMenu = document.getElementById('stockMenu');
+            const stockHeader = document.getElementById('stockHeader');
+            
+            if (stockMenu && stockHeader) {
+                stockMenu.classList.toggle('collapsed');
+                stockHeader.classList.toggle('collapsed');
+                
+                // Save state to localStorage
+                localStorage.setItem('stockMenuCollapsed', stockMenu.classList.contains('collapsed'));
+            }
+        }
+
         // Initialize CRM menu state on page load
         document.addEventListener('DOMContentLoaded', function() {
             const crmMenuOpen = localStorage.getItem('crmMenuOpen');
@@ -1061,6 +1100,17 @@
                 if (attendanceMenu && attendanceHeader) {
                     attendanceMenu.classList.add('collapsed');
                     attendanceHeader.classList.add('collapsed');
+                }
+            }
+
+            // Stock menu
+            const stockSavedState = localStorage.getItem('stockMenuCollapsed');
+            if (stockSavedState === 'true') {
+                const stockMenu = document.getElementById('stockMenu');
+                const stockHeader = document.getElementById('stockHeader');
+                if (stockMenu && stockHeader) {
+                    stockMenu.classList.add('collapsed');
+                    stockHeader.classList.add('collapsed');
                 }
             }
 

@@ -167,6 +167,10 @@ Route::middleware(['auth'])->group(function () {
     // Leaves
     Route::resource('leaves', App\Http\Controllers\LeaveController::class);
     
+    // Stock Reports
+    Route::get('stock/raw-material', [App\Http\Controllers\StockController::class, 'rawMaterialStock'])->name('stock.raw-material');
+    Route::get('stock/finished-goods', [App\Http\Controllers\StockController::class, 'finishedGoodsStock'])->name('stock.finished-goods');
+    
     // Stock Transactions
     Route::resource('stock-transactions', App\Http\Controllers\StockTransactionController::class);
     
