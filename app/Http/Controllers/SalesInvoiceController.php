@@ -34,8 +34,8 @@ class SalesInvoiceController extends Controller
 
     public function create()
     {
-        $customers = Customer::where('is_active', true)->orderBy('customer_name')->get();
-        $products = Product::where('is_active', true)->orderBy('product_name')->get();
+        $customers = Customer::orderBy('customer_name')->get();
+        $products = Product::orderBy('product_name')->get();
 
         $activeBranchId = session('active_branch_id');
         $companyInfo = null;
@@ -114,8 +114,8 @@ class SalesInvoiceController extends Controller
 
     public function edit(SalesInvoice $salesInvoice)
     {
-        $customers = Customer::where('is_active', true)->orderBy('customer_name')->get();
-        $products = Product::where('is_active', true)->orderBy('product_name')->get();
+        $customers = Customer::orderBy('customer_name')->get();
+        $products = Product::orderBy('product_name')->get();
 
         $activeBranchId = session('active_branch_id');
         $companyInfo = null;

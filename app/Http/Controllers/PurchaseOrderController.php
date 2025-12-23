@@ -34,8 +34,8 @@ class PurchaseOrderController extends Controller
 
     public function create()
     {
-        $suppliers = Supplier::where('is_active', true)->orderBy('supplier_name')->get();
-        $rawMaterials = RawMaterial::where('is_active', true)->orderBy('raw_material_name')->get();
+        $suppliers = Supplier::orderBy('supplier_name')->get();
+        $rawMaterials = RawMaterial::orderBy('raw_material_name')->get();
 
         $activeBranchId = session('active_branch_id');
         $companyInfo = null;
@@ -52,7 +52,36 @@ class PurchaseOrderController extends Controller
     {
         $data = $this->validateRequest($request);
 
-        $poNumber = 'PO-' . strtoupper(Str::random(8));
+        // Generate sequential Purchase Order Number starting from PUR001
+        $allPurchaseOrders = PurchaseOrder::withTrashed()
+            ->where('po_number', 'like', 'PUR%')
+            ->get();
+
+        $maxNumber = 0;
+        foreach ($allPurchaseOrders as $po) {
+            // Extract number from code (e.g., PUR001 -> 1, PUR123 -> 123)
+            if (preg_match('/^PUR(\d+)$/i', $po->po_number, $matches)) {
+                $number = (int)$matches[1];
+                if ($number > $maxNumber) {
+                    $maxNumber = $number;
+                }
+            }
+        }
+
+        // Next number is max + 1, starting from 1 if no purchase orders exist
+        $nextNumber = $maxNumber + 1;
+
+        // Format as PUR001, PUR002, etc. (3 digits with leading zeros)
+        $poNumber = 'PUR' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+
+        // Safety check: if code exists (shouldn't happen, but just in case), find next available
+        $maxAttempts = 10000;
+        $attempts = 0;
+        while (PurchaseOrder::withTrashed()->where('po_number', $poNumber)->exists() && $attempts < $maxAttempts) {
+            $nextNumber++;
+            $poNumber = 'PUR' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+            $attempts++;
+        }
 
         $purchaseOrder = new PurchaseOrder();
         $purchaseOrder->fill([
@@ -60,7 +89,6 @@ class PurchaseOrderController extends Controller
             'supplier_id' => $data['supplier_id'],
             'purchase_date' => $data['purchase_date'],
             'delivery_date' => $data['delivery_date'] ?? null,
-            'gst_percentage_overall' => $data['gst_percentage_overall'] ?? null,
             'gst_classification' => $this->determineGstClassification($data['supplier_id']),
         ]);
 
@@ -109,8 +137,8 @@ class PurchaseOrderController extends Controller
 
     public function edit(PurchaseOrder $purchaseOrder)
     {
-        $suppliers = Supplier::where('is_active', true)->orderBy('supplier_name')->get();
-        $rawMaterials = RawMaterial::where('is_active', true)->orderBy('raw_material_name')->get();
+        $suppliers = Supplier::orderBy('supplier_name')->get();
+        $rawMaterials = RawMaterial::orderBy('raw_material_name')->get();
 
         $activeBranchId = session('active_branch_id');
         $companyInfo = null;
@@ -132,7 +160,6 @@ class PurchaseOrderController extends Controller
         $purchaseOrder->supplier_id = $data['supplier_id'];
         $purchaseOrder->purchase_date = $data['purchase_date'];
         $purchaseOrder->delivery_date = $data['delivery_date'] ?? null;
-        $purchaseOrder->gst_percentage_overall = $data['gst_percentage_overall'] ?? null;
         $purchaseOrder->gst_classification = $this->determineGstClassification($data['supplier_id']);
 
         $totals = $this->calculateTotalsFromItems($data['items'] ?? []);
@@ -181,7 +208,6 @@ class PurchaseOrderController extends Controller
             'supplier_id' => ['required', 'exists:suppliers,id'],
             'purchase_date' => ['required', 'date'],
             'delivery_date' => ['nullable', 'date'],
-            'gst_percentage_overall' => ['nullable', 'numeric', 'min:0'],
 
             'items' => ['required', 'array', 'min:1'],
             'items.*.raw_material_id' => ['required', 'exists:raw_materials,id'],

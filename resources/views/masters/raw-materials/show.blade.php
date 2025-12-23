@@ -20,7 +20,7 @@
         <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Basic Information</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div>
-                <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Raw Material Code</label>
+                <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Raw Material ID</label>
                 <p style="color: #333; font-size: 16px; margin: 0 0 20px 0; font-weight: 500;">{{ $rawMaterial->code }}</p>
             </div>
             <div>
@@ -32,69 +32,8 @@
                 <p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">{{ $rawMaterial->unit_of_measure }}</p>
             </div>
             <div>
-                <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Status</label>
-                <p style="margin: 0 0 20px 0;">
-                    @if($rawMaterial->is_active)
-                        <span style="padding: 4px 12px; background: #d4edda; color: #155724; border-radius: 12px; font-size: 12px;">Active</span>
-                    @else
-                        <span style="padding: 4px 12px; background: #f8d7da; color: #721c24; border-radius: 12px; font-size: 12px;">Inactive</span>
-                    @endif
-                </p>
-            </div>
-            @if($rawMaterial->description)
-                <div style="grid-column: 1 / -1;">
-                    <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Description</label>
-                    <p style="color: #333; font-size: 16px; margin: 0;">{{ $rawMaterial->description }}</p>
-                </div>
-            @endif
-        </div>
-    </div>
-
-    <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-        <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Stock Information</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div>
-                <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Quantity Available</label>
-                <p style="color: #333; font-size: 16px; margin: 0 0 20px 0; {{ $rawMaterial->isLowStock() ? 'color: #dc3545; font-weight: 600;' : '' }}">
-                    {{ number_format($rawMaterial->quantity_available, 2) }} {{ $rawMaterial->unit_of_measure }}
-                    @if($rawMaterial->isLowStock())
-                        <span style="padding: 4px 8px; background: #fff3cd; color: #856404; border-radius: 4px; font-size: 12px; margin-left: 10px;">Low Stock</span>
-                    @endif
-                </p>
-            </div>
-            <div>
                 <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Reorder Level</label>
                 <p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">{{ number_format($rawMaterial->reorder_level, 2) }} {{ $rawMaterial->unit_of_measure }}</p>
-            </div>
-        </div>
-    </div>
-
-    <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-        <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Supplier & Pricing Information</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div>
-                <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Supplier</label>
-                <p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">
-                    @if($rawMaterial->supplier)
-                        {{ $rawMaterial->supplier->supplier_name }} ({{ $rawMaterial->supplier->code }})
-                    @else
-                        N/A
-                    @endif
-                </p>
-            </div>
-            <div>
-                <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Price per Unit</label>
-                <p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">₹{{ number_format($rawMaterial->price_per_unit, 2) }}</p>
-            </div>
-            <div>
-                <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">GST Percentage</label>
-                <p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">{{ number_format($rawMaterial->gst_percentage, 2) }}%</p>
-            </div>
-            <div>
-                <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Total Value</label>
-                <p style="color: #333; font-size: 16px; margin: 0 0 20px 0; font-weight: 600;">
-                    ₹{{ number_format($rawMaterial->quantity_available * $rawMaterial->price_per_unit, 2) }}
-                </p>
             </div>
         </div>
     </div>

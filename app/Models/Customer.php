@@ -28,19 +28,10 @@ class Customer extends Model
         'shipping_state',
         'shipping_postal_code',
         'shipping_country',
-        'payment_terms',
         'gst_number',
-        'credit_limit',
-        'notes',
-        'is_active',
         'organization_id',
         'branch_id',
         'created_by',
-    ];
-
-    protected $casts = [
-        'credit_limit' => 'decimal:2',
-        'is_active' => 'boolean',
     ];
 
     /**

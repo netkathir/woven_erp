@@ -6,7 +6,11 @@ use App\Models\StockTransaction;
 use App\Models\RawMaterial;
 use App\Models\Product;
 use App\Models\MaterialInward;
+use App\Models\MaterialInwardItem;
 use App\Models\SalesInvoice;
+use App\Models\SalesInvoiceItem;
+use App\Models\Production;
+use App\Models\WorkOrderMaterial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -36,8 +40,8 @@ class StockTransactionController extends Controller
 
     public function create()
     {
-        $rawMaterials = RawMaterial::where('is_active', true)->orderBy('raw_material_name')->get();
-        $products = Product::where('is_active', true)->orderBy('product_name')->get();
+        $rawMaterials = RawMaterial::orderBy('raw_material_name')->get();
+        $products = Product::orderBy('product_name')->get();
         $materialInwards = MaterialInward::orderByDesc('id')->get();
         $salesInvoices = SalesInvoice::orderByDesc('id')->get();
 
@@ -107,24 +111,8 @@ class StockTransactionController extends Controller
             $stockTransaction->created_by = $user->id;
         }
 
-        DB::transaction(function () use ($stockTransaction, $data) {
-            $stockTransaction->save();
-
-            // Update stock quantity
-            if ($data['transaction_type'] === 'stock_in') {
-                if ($data['item_type'] === 'raw_material') {
-                    RawMaterial::where('id', $data['item_id'])->increment('quantity_available', $data['quantity']);
-                } else {
-                    Product::where('id', $data['item_id'])->increment('stock_quantity', $data['quantity']);
-                }
-            } else { // stock_out
-                if ($data['item_type'] === 'raw_material') {
-                    RawMaterial::where('id', $data['item_id'])->decrement('quantity_available', $data['quantity']);
-                } else {
-                    Product::where('id', $data['item_id'])->decrement('stock_quantity', $data['quantity']);
-                }
-            }
-        });
+        // Save the transaction (stock is calculated dynamically, not stored in raw_materials/products tables)
+        $stockTransaction->save();
 
         return redirect()->route('stock-transactions.index')
             ->with('success', 'Stock Transaction created successfully.');
@@ -137,8 +125,8 @@ class StockTransactionController extends Controller
 
     public function edit(StockTransaction $stockTransaction)
     {
-        $rawMaterials = RawMaterial::where('is_active', true)->orderBy('raw_material_name')->get();
-        $products = Product::where('is_active', true)->orderBy('product_name')->get();
+        $rawMaterials = RawMaterial::orderBy('raw_material_name')->get();
+        $products = Product::orderBy('product_name')->get();
         $materialInwards = MaterialInward::orderByDesc('id')->get();
         $salesInvoices = SalesInvoice::orderByDesc('id')->get();
 
@@ -212,39 +200,8 @@ class StockTransactionController extends Controller
         $stockTransaction->source_document_id = $data['source_document_id'] ?? null;
         $stockTransaction->source_document_number = $sourceDocumentNumber;
 
-        DB::transaction(function () use ($stockTransaction, $data, $oldQuantity, $oldItemType, $oldItemId, $oldTransactionType) {
-            // Reverse old transaction
-            if ($oldTransactionType === 'stock_in') {
-                if ($oldItemType === 'raw_material') {
-                    RawMaterial::where('id', $oldItemId)->decrement('quantity_available', $oldQuantity);
-                } else {
-                    Product::where('id', $oldItemId)->decrement('stock_quantity', $oldQuantity);
-                }
-            } else {
-                if ($oldItemType === 'raw_material') {
-                    RawMaterial::where('id', $oldItemId)->increment('quantity_available', $oldQuantity);
-                } else {
-                    Product::where('id', $oldItemId)->increment('stock_quantity', $oldQuantity);
-                }
-            }
-
-            $stockTransaction->save();
-
-            // Apply new transaction
-            if ($data['transaction_type'] === 'stock_in') {
-                if ($data['item_type'] === 'raw_material') {
-                    RawMaterial::where('id', $data['item_id'])->increment('quantity_available', $data['quantity']);
-                } else {
-                    Product::where('id', $data['item_id'])->increment('stock_quantity', $data['quantity']);
-                }
-            } else {
-                if ($data['item_type'] === 'raw_material') {
-                    RawMaterial::where('id', $data['item_id'])->decrement('quantity_available', $data['quantity']);
-                } else {
-                    Product::where('id', $data['item_id'])->decrement('stock_quantity', $data['quantity']);
-                }
-            }
-        });
+        // Save the transaction (stock is calculated dynamically, not stored in raw_materials/products tables)
+        $stockTransaction->save();
 
         return redirect()->route('stock-transactions.index')
             ->with('success', 'Stock Transaction updated successfully.');
@@ -252,24 +209,8 @@ class StockTransactionController extends Controller
 
     public function destroy(StockTransaction $stockTransaction)
     {
-        DB::transaction(function () use ($stockTransaction) {
-            // Reverse the transaction
-            if ($stockTransaction->transaction_type === 'stock_in') {
-                if ($stockTransaction->item_type === 'raw_material') {
-                    RawMaterial::where('id', $stockTransaction->item_id)->decrement('quantity_available', $stockTransaction->quantity);
-                } else {
-                    Product::where('id', $stockTransaction->item_id)->decrement('stock_quantity', $stockTransaction->quantity);
-                }
-            } else {
-                if ($stockTransaction->item_type === 'raw_material') {
-                    RawMaterial::where('id', $stockTransaction->item_id)->increment('quantity_available', $stockTransaction->quantity);
-                } else {
-                    Product::where('id', $stockTransaction->item_id)->increment('stock_quantity', $stockTransaction->quantity);
-                }
-            }
-
-            $stockTransaction->delete();
-        });
+        // Delete the transaction (stock is calculated dynamically, not stored in raw_materials/products tables)
+        $stockTransaction->delete();
 
         return redirect()->route('stock-transactions.index')
             ->with('success', 'Stock Transaction deleted successfully.');
@@ -298,12 +239,70 @@ class StockTransactionController extends Controller
 
     protected function getAvailableStock(string $itemType, int $itemId): float
     {
+        // Calculate stock dynamically based on Material Inward, Production, and Stock Transactions
         if ($itemType === 'raw_material') {
-            $item = RawMaterial::find($itemId);
-            return $item ? (float) $item->quantity_available : 0;
+            $rawMaterial = RawMaterial::find($itemId);
+            if (!$rawMaterial) {
+                return 0;
+            }
+            
+            // Get total received from Material Inward
+            $totalReceived = MaterialInwardItem::where('raw_material_id', $itemId)
+                ->sum('quantity_received') ?? 0;
+            
+            // Get total from stock transactions (stock_in - stock_out)
+            $totalStockIn = StockTransaction::where('item_type', 'raw_material')
+                ->where('item_id', $itemId)
+                ->where('transaction_type', 'stock_in')
+                ->sum('quantity') ?? 0;
+            
+            $totalStockOut = StockTransaction::where('item_type', 'raw_material')
+                ->where('item_id', $itemId)
+                ->where('transaction_type', 'stock_out')
+                ->sum('quantity') ?? 0;
+            
+            // Calculate consumed from Production (through WorkOrderMaterials)
+            $workOrderIdsWithProduction = Production::distinct()
+                ->pluck('work_order_id')
+                ->filter()
+                ->toArray();
+            
+            $totalConsumed = \App\Models\WorkOrderMaterial::whereIn('work_order_id', $workOrderIdsWithProduction)
+                ->where('raw_material_id', $itemId)
+                ->get()
+                ->sum(function($item) {
+                    return $item->consumption ?? $item->material_required ?? 0;
+                });
+            
+            // Available stock = Received + Stock In - Stock Out - Consumed
+            return max(0, $totalReceived + $totalStockIn - $totalStockOut - $totalConsumed);
         } else {
-            $item = Product::find($itemId);
-            return $item ? (float) $item->stock_quantity : 0;
+            $product = Product::find($itemId);
+            if (!$product) {
+                return 0;
+            }
+            
+            // Get total produced from Production
+            $totalProduced = Production::where('product_id', $itemId)
+                ->sum('produced_quantity') ?? 0;
+            
+            // Get total from stock transactions (stock_in - stock_out)
+            $totalStockIn = StockTransaction::where('item_type', 'product')
+                ->where('item_id', $itemId)
+                ->where('transaction_type', 'stock_in')
+                ->sum('quantity') ?? 0;
+            
+            $totalStockOut = StockTransaction::where('item_type', 'product')
+                ->where('item_id', $itemId)
+                ->where('transaction_type', 'stock_out')
+                ->sum('quantity') ?? 0;
+            
+            // Get total sold from Sales Invoices
+            $totalSold = SalesInvoiceItem::where('product_id', $itemId)
+                ->sum('quantity_sold') ?? 0;
+            
+            // Available stock = Produced + Stock In - Stock Out - Sold
+            return max(0, $totalProduced + $totalStockIn - $totalStockOut - $totalSold);
         }
     }
 }

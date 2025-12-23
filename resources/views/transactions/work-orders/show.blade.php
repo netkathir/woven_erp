@@ -38,54 +38,22 @@
             <div style="font-weight: 600; color: #111827;">{{ number_format($workOrder->quantity_to_produce, 3) }}</div>
         </div>
         <div>
-            <div style="font-size: 13px; color: #6b7280;">Work Order Type</div>
-            <div style="font-weight: 600; color: #111827;">
-                {{ $workOrder->work_order_type === 'customer_order' ? 'Customer Order' : 'Internal' }}
-            </div>
-        </div>
-        <div>
             <div style="font-size: 13px; color: #6b7280;">Status</div>
             <div style="font-weight: 600; color: #111827;">
                 @if($workOrder->status === \App\Models\WorkOrder::STATUS_COMPLETED)
-                    Completed
+                    <span style="padding: 4px 12px; background: #d4edda; color: #155724; border-radius: 12px; font-size: 12px;">Completed</span>
                 @else
-                    Open
+                    <span style="padding: 4px 12px; background: #fff3cd; color: #856404; border-radius: 12px; font-size: 12px;">Open</span>
                 @endif
             </div>
         </div>
-    </div>
-
-    <h3 style="margin-bottom: 12px; font-size: 18px; color: #333;">Material Required & Consumption</h3>
-
-    <div style="overflow-x: auto; margin-bottom: 20px;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                    <th style="padding: 10px; text-align: left;">Material</th>
-                    <th style="padding: 10px; text-align: left;">UOM</th>
-                    <th style="padding: 10px; text-align: right;">Material Required</th>
-                    <th style="padding: 10px; text-align: right;">Consumption</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($workOrder->materials as $material)
-                    <tr style="border-bottom: 1px solid #e5e7eb;">
-                        <td style="padding: 8px; color: #111827;">
-                            {{ $material->rawMaterial->raw_material_name ?? '-' }}
-                        </td>
-                        <td style="padding: 8px; color: #111827;">
-                            {{ $material->unit_of_measure }}
-                        </td>
-                        <td style="padding: 8px; text-align: right; color: #111827;">
-                            {{ number_format($material->material_required, 3) }}
-                        </td>
-                        <td style="padding: 8px; text-align: right; color: #111827;">
-                            {{ number_format($material->consumption, 3) }}
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+        @php
+            $totalProducedQuantity = $workOrder->productions()->sum('produced_quantity');
+        @endphp
+        <div>
+            <div style="font-size: 13px; color: #6b7280;">Total Produced Quantity</div>
+            <div style="font-weight: 600; color: #111827;">{{ number_format($totalProducedQuantity, 3) }}</div>
+        </div>
     </div>
 </div>
 @endsection

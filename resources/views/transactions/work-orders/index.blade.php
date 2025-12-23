@@ -42,12 +42,11 @@
                 <thead>
                     <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">S.No</th>
-                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">WO Number</th>
+                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Work Order Number</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Customer</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Product</th>
                         <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Qty to Produce</th>
-                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Type</th>
-                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Date</th>
+                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Work Order Date</th>
                         <th style="padding: 12px; text-align: center; color: #333; font-weight: 600;">Status</th>
                         <th style="padding: 12px; text-align: center; color: #333; font-weight: 600;">Actions</th>
                     </tr>
@@ -60,9 +59,6 @@
                             <td style="padding: 12px; color: #333;">{{ $wo->customer->customer_name ?? '-' }}</td>
                             <td style="padding: 12px; color: #333;">{{ $wo->product->product_name ?? '-' }}</td>
                             <td style="padding: 12px; color: #333; text-align: right;">{{ number_format($wo->quantity_to_produce, 3) }}</td>
-                            <td style="padding: 12px; color: #333;">
-                                {{ $wo->work_order_type === 'customer_order' ? 'Customer Order' : 'Internal' }}
-                            </td>
                             <td style="padding: 12px; color: #666;">{{ optional($wo->work_order_date)->format('d-m-Y') }}</td>
                             <td style="padding: 12px; text-align: center;">
                                 @if($wo->status === \App\Models\WorkOrder::STATUS_COMPLETED)

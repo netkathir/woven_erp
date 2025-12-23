@@ -32,8 +32,11 @@ class ProductionController extends Controller
 
     public function create(Request $request)
     {
-        $workOrders = WorkOrder::orderByDesc('id')->get();
-        $products = Product::where('is_active', true)->orderBy('product_name')->get();
+        // Only show open work orders (exclude completed ones)
+        $workOrders = WorkOrder::where('status', WorkOrder::STATUS_OPEN)
+            ->orderByDesc('id')
+            ->get();
+        $products = Product::orderBy('product_name')->get();
 
         $selectedWorkOrderId = $request->get('work_order_id');
         $selectedWorkOrder = null;
@@ -68,8 +71,11 @@ class ProductionController extends Controller
         }
 
         $production->save();
-
-        $this->incrementProductStock($production->product, $production->produced_quantity);
+        
+        // Auto-update work order status if work_order_id is set
+        if ($production->work_order_id) {
+            $this->updateWorkOrderStatus($production->work_order_id);
+        }
 
         return redirect()->route('productions.index')
             ->with('success', 'Production entry created successfully.');
@@ -83,18 +89,24 @@ class ProductionController extends Controller
 
     public function edit(Production $production)
     {
-        $workOrders = WorkOrder::orderByDesc('id')->get();
-        $products = Product::where('is_active', true)->orderBy('product_name')->get();
         $production->load(['workOrder', 'product']);
+        
+        // Only show open work orders, but also include the work order already associated with this production (even if completed)
+        $workOrders = WorkOrder::where(function($query) use ($production) {
+            $query->where('status', WorkOrder::STATUS_OPEN)
+                  ->orWhere('id', $production->work_order_id);
+        })
+        ->orderByDesc('id')
+        ->get();
+        
+        $products = Product::orderBy('product_name')->get();
+        
         return view('transactions.productions.edit', compact('production', 'workOrders', 'products'));
     }
 
     public function update(Request $request, Production $production)
     {
         $data = $this->validateRequest($request);
-
-        // revert previous stock
-        $this->decrementProductStock($production->product, $production->produced_quantity);
 
         $totals = $this->calculateTotals($data['produced_quantity'], $data['weight_per_unit']);
 
@@ -104,10 +116,17 @@ class ProductionController extends Controller
         $production->weight_per_unit = $data['weight_per_unit'];
         $production->total_weight = $totals['total_weight'];
         $production->remarks = $data['remarks'] ?? null;
+        $oldWorkOrderId = $production->getOriginal('work_order_id');
+        
         $production->save();
-
-        // apply new stock
-        $this->incrementProductStock($production->product, $production->produced_quantity);
+        
+        // Auto-update work order status for both old and new work orders
+        if ($oldWorkOrderId) {
+            $this->updateWorkOrderStatus($oldWorkOrderId);
+        }
+        if ($production->work_order_id && $production->work_order_id != $oldWorkOrderId) {
+            $this->updateWorkOrderStatus($production->work_order_id);
+        }
 
         return redirect()->route('productions.index')
             ->with('success', 'Production entry updated successfully.');
@@ -115,10 +134,14 @@ class ProductionController extends Controller
 
     public function destroy(Production $production)
     {
-        // revert stock
-        $this->decrementProductStock($production->product, $production->produced_quantity);
+        $workOrderId = $production->work_order_id;
 
         $production->delete();
+        
+        // Auto-update work order status if work_order_id was set
+        if ($workOrderId) {
+            $this->updateWorkOrderStatus($workOrderId);
+        }
 
         return redirect()->route('productions.index')
             ->with('success', 'Production entry deleted successfully.');
@@ -147,24 +170,28 @@ class ProductionController extends Controller
         ];
     }
 
-    protected function incrementProductStock(?Product $product, float $qty): void
+    /**
+     * Auto-update work order status based on production quantity
+     */
+    protected function updateWorkOrderStatus(int $workOrderId): void
     {
-        if (!$product || $qty == 0.0) {
+        $workOrder = WorkOrder::find($workOrderId);
+        if (!$workOrder) {
             return;
         }
 
-        $product->stock_quantity = ((float) $product->stock_quantity) + $qty;
-        $product->save();
-    }
+        // Calculate total produced quantity for this work order
+        $totalProducedQuantity = Production::where('work_order_id', $workOrderId)
+            ->sum('produced_quantity');
 
-    protected function decrementProductStock(?Product $product, float $qty): void
-    {
-        if (!$product || $qty == 0.0) {
-            return;
+        // Update status: completed if total production >= quantity to produce
+        if ($totalProducedQuantity >= (float) $workOrder->quantity_to_produce && $workOrder->quantity_to_produce > 0) {
+            $workOrder->status = WorkOrder::STATUS_COMPLETED;
+        } else {
+            $workOrder->status = WorkOrder::STATUS_OPEN;
         }
 
-        $product->stock_quantity = ((float) $product->stock_quantity) - $qty;
-        $product->save();
+        $workOrder->save();
     }
 }
 

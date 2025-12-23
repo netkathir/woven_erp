@@ -41,8 +41,8 @@
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Code</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Product Name</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Unit</th>
-                        <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Initial Qty</th>
-                        <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Produced</th>
+                        <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Production Count</th>
+                        <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Total Produced</th>
                         <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Sold</th>
                         <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Current Stock</th>
                         <th style="padding: 12px; text-align: center; color: #333; font-weight: 600;">Status</th>
@@ -55,8 +55,8 @@
                             <td style="padding: 12px; color: #333; font-weight: 500;">{{ $data['product']->code ?? 'N/A' }}</td>
                             <td style="padding: 12px; color: #333; font-weight: 500;">{{ $data['product']->product_name ?? 'N/A' }}</td>
                             <td style="padding: 12px; color: #666;">{{ $data['product']->unit_of_measure ?? '-' }}</td>
-                            <td style="padding: 12px; text-align: right; color: #666;">
-                                {{ number_format($data['initial_quantity'], 2) }}
+                            <td style="padding: 12px; text-align: right; color: #667eea; font-weight: 600;">
+                                {{ $data['production_count'] ?? 0 }}
                             </td>
                             <td style="padding: 12px; text-align: right; color: #28a745; font-weight: 500;">
                                 {{ number_format($data['total_produced'], 2) }}
@@ -90,14 +90,14 @@
 
         <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
             <p style="margin: 0; color: #666; font-size: 13px;">
-                <strong>Note:</strong> Stock is calculated as: Initial Quantity + Produced - Sold
+                <strong>Note:</strong> This report shows only products that have production entries. Stock is calculated as: Total Produced - Sold
             </p>
         </div>
     @else
         <div style="text-align: center; padding: 40px; color: #666;">
             <i class="fas fa-box-open" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
             <p style="font-size: 18px; margin-bottom: 10px;">No finished goods found.</p>
-            <p style="font-size: 14px; color: #999;">Please create products in Product Master first.</p>
+            <p style="font-size: 14px; color: #999;">No production entries found. Please create production entries first.</p>
         </div>
     @endif
 </div>

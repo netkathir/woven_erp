@@ -15,7 +15,6 @@ class WorkOrder extends Model
         'customer_id',
         'product_id',
         'quantity_to_produce',
-        'work_order_type',
         'work_order_date',
         'status',
         'organization_id',

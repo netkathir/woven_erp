@@ -55,14 +55,10 @@
                 <thead>
                     <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">S.No</th>
-                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Code</th>
+                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Raw Material ID</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Raw Material Name</th>
-                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Unit</th>
-                        <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Quantity</th>
+                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Unit of Measure</th>
                         <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Reorder Level</th>
-                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Supplier</th>
-                        <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Price/Unit</th>
-                        <th style="padding: 12px; text-align: center; color: #333; font-weight: 600;">Status</th>
                         <th style="padding: 12px; text-align: center; color: #333; font-weight: 600;">Actions</th>
                     </tr>
                 </thead>
@@ -73,21 +69,7 @@
                             <td style="padding: 12px; color: #333; font-weight: 500;">{{ $rawMaterial->code }}</td>
                             <td style="padding: 12px; color: #333; font-weight: 500;">{{ $rawMaterial->raw_material_name }}</td>
                             <td style="padding: 12px; color: #666;">{{ $rawMaterial->unit_of_measure }}</td>
-                            <td style="padding: 12px; text-align: right; color: #666;">
-                                <span style="{{ $rawMaterial->isLowStock() ? 'color: #dc3545; font-weight: 600;' : '' }}">
-                                    {{ number_format($rawMaterial->quantity_available, 2) }}
-                                </span>
-                            </td>
                             <td style="padding: 12px; text-align: right; color: #666;">{{ number_format($rawMaterial->reorder_level, 2) }}</td>
-                            <td style="padding: 12px; color: #666;">{{ $rawMaterial->supplier ? $rawMaterial->supplier->supplier_name : 'N/A' }}</td>
-                            <td style="padding: 12px; text-align: right; color: #666;">₹{{ number_format($rawMaterial->price_per_unit, 2) }}</td>
-                            <td style="padding: 12px; text-align: center;">
-                                @if($rawMaterial->is_active)
-                                    <span style="padding: 4px 12px; background: #d4edda; color: #155724; border-radius: 12px; font-size: 12px;">Active</span>
-                                @else
-                                    <span style="padding: 4px 12px; background: #f8d7da; color: #721c24; border-radius: 12px; font-size: 12px;">Inactive</span>
-                                @endif
-                            </td>
                             <td style="padding: 12px; text-align: center;">
                                 <div style="display: flex; gap: 8px; justify-content: center;">
                                     @if($canRead)

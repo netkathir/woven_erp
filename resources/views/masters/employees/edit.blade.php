@@ -30,9 +30,11 @@
             <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Basic Information</h3>
             
             <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Employee Code</label>
-                <input type="text" value="{{ $employee->code }}" disabled
-                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; background: #e9ecef;">
+                <label style="display: block; margin-bottom: 8px; color: #666; font-weight: 500;">Employee ID</label>
+                <div style="padding: 12px; background: #e9ecef; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; color: #333; font-weight: 500;">
+                    {{ $employee->code }}
+                </div>
+                <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Employee ID cannot be changed</small>
             </div>
 
             <div style="margin-bottom: 20px;">
@@ -105,48 +107,13 @@
                 @enderror
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                <div>
-                    <label for="salary" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Salary</label>
-                    <input type="number" name="salary" id="salary" value="{{ old('salary', $employee->salary) }}" step="0.01" min="0"
-                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
-                        placeholder="0.00">
-                    @error('salary')
-                        <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label for="joining_date" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Joining Date</label>
-                    <input type="date" name="joining_date" id="joining_date" value="{{ old('joining_date', optional($employee->joining_date)->format('Y-m-d')) }}"
-                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
-                    @error('joining_date')
-                        <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                    @enderror
-                </div>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label for="manager_id" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Manager</label>
-                <select name="manager_id" id="manager_id"
-                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; background: #fff;">
-                    <option value="">Select manager</option>
-                    @foreach($managers as $manager)
-                        <option value="{{ $manager->id }}" {{ old('manager_id', $employee->manager_id) == $manager->id ? 'selected' : '' }}>
-                            {{ $manager->employee_name }} ({{ $manager->designation ?? 'N/A' }})
-                        </option>
-                    @endforeach
-                </select>
-                @error('manager_id')
+            <div>
+                <label for="joining_date" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Joining Date</label>
+                <input type="date" name="joining_date" id="joining_date" value="{{ old('joining_date', optional($employee->joining_date)->format('Y-m-d')) }}"
+                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+                @error('joining_date')
                     <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
                 @enderror
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $employee->is_active) ? 'checked' : '' }}
-                        style="width: 18px; height: 18px; cursor: pointer;">
-                    <span style="color: #333; font-weight: 500;">Active</span>
-                </label>
             </div>
         </div>
 
@@ -174,10 +141,7 @@
         document.getElementById('phone_number').value = '{{ addslashes($employee->phone_number ?? '') }}';
         document.getElementById('email').value = '{{ addslashes($employee->email ?? '') }}';
         document.getElementById('address').value = '{{ addslashes($employee->address ?? '') }}';
-        document.getElementById('salary').value = '{{ $employee->salary }}';
         document.getElementById('joining_date').value = '{{ optional($employee->joining_date)->format('Y-m-d') }}';
-        document.getElementById('manager_id').value = '{{ $employee->manager_id }}';
-        document.querySelector('input[name="is_active"]').checked = {{ $employee->is_active ? 'true' : 'false' }};
     }
 </script>
 @endpush

@@ -30,7 +30,7 @@ class LeaveController extends Controller
 
     public function create()
     {
-        $employees = Employee::where('is_active', true)->orderBy('employee_name')->get();
+        $employees = Employee::orderBy('employee_name')->get();
         $leaveTypes = LeaveType::where('is_active', true)->orderBy('name')->get();
         
         // Get default leave type (Casual Leave)
@@ -117,7 +117,7 @@ class LeaveController extends Controller
 
     public function edit(Leave $leaf)
     {
-        $employees = Employee::where('is_active', true)->orderBy('employee_name')->get();
+        $employees = Employee::orderBy('employee_name')->get();
         $leaveTypes = LeaveType::where('is_active', true)->orderBy('name')->get();
         
         return view('attendance.leaves.edit', compact('leaf', 'employees', 'leaveTypes'));

@@ -30,6 +30,14 @@
             <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Basic Information</h3>
             
             <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #666; font-weight: 500;">Raw Material ID</label>
+                <div style="padding: 12px; background: #e9ecef; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; color: #333; font-weight: 500;">
+                    {{ $rawMaterial->code }}
+                </div>
+                <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Raw Material ID cannot be changed</small>
+            </div>
+
+            <div style="margin-bottom: 20px;">
                 <label for="raw_material_name" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Raw Material Name <span style="color: red;">*</span></label>
                 <input type="text" name="raw_material_name" id="raw_material_name" value="{{ old('raw_material_name', $rawMaterial->raw_material_name) }}" required
                     style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
@@ -64,88 +72,15 @@
             </div>
 
             <div style="margin-bottom: 20px;">
-                <label for="description" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Description</label>
-                <textarea name="description" id="description" rows="3"
-                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; resize: vertical;"
-                    placeholder="Enter description (optional)">{{ old('description', $rawMaterial->description) }}</textarea>
-                @error('description')
+                <label for="reorder_level" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Reorder Level <span style="color: red;">*</span></label>
+                <input type="number" name="reorder_level" id="reorder_level" value="{{ old('reorder_level', $rawMaterial->reorder_level) }}" step="0.01" min="0" required
+                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
+                    placeholder="Enter reorder level (stock threshold for reorder)">
+                <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Stock threshold for reorder</small>
+                @error('reorder_level')
                     <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
                 @enderror
             </div>
-        </div>
-
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-            <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Stock Information</h3>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                <div>
-                    <label for="quantity_available" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Quantity Available <span style="color: red;">*</span></label>
-                    <input type="number" name="quantity_available" id="quantity_available" value="{{ old('quantity_available', $rawMaterial->quantity_available) }}" step="0.01" min="0" required
-                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
-                        placeholder="0.00">
-                    @error('quantity_available')
-                        <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label for="reorder_level" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Reorder Level <span style="color: red;">*</span></label>
-                    <input type="number" name="reorder_level" id="reorder_level" value="{{ old('reorder_level', $rawMaterial->reorder_level) }}" step="0.01" min="0" required
-                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
-                        placeholder="0.00">
-                    @error('reorder_level')
-                        <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                    @enderror
-                </div>
-            </div>
-        </div>
-
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-            <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Supplier & Pricing Information</h3>
-            
-            <div style="margin-bottom: 20px;">
-                <label for="supplier_id" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Supplier</label>
-                <select name="supplier_id" id="supplier_id"
-                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; background: #fff;">
-                    <option value="">Select supplier (optional)</option>
-                    @foreach($suppliers as $supplier)
-                        <option value="{{ $supplier->id }}" {{ old('supplier_id', $rawMaterial->supplier_id) == $supplier->id ? 'selected' : '' }}>
-                            {{ $supplier->supplier_name }} ({{ $supplier->code }})
-                        </option>
-                    @endforeach
-                </select>
-                @error('supplier_id')
-                    <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div>
-                    <label for="price_per_unit" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Price per Unit <span style="color: red;">*</span></label>
-                    <input type="number" name="price_per_unit" id="price_per_unit" value="{{ old('price_per_unit', $rawMaterial->price_per_unit) }}" step="0.01" min="0" required
-                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
-                        placeholder="0.00">
-                    @error('price_per_unit')
-                        <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label for="gst_percentage" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">GST Percentage</label>
-                    <input type="number" name="gst_percentage" id="gst_percentage" value="{{ old('gst_percentage', $rawMaterial->gst_percentage) }}" step="0.01" min="0" max="100"
-                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
-                        placeholder="0.00">
-                    @error('gst_percentage')
-                        <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                    @enderror
-                </div>
-            </div>
-        </div>
-
-        <div style="margin-bottom: 20px;">
-            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                <input type="checkbox" name="is_active" value="1" {{ old('is_active', $rawMaterial->is_active) ? 'checked' : '' }}
-                    style="width: 18px; height: 18px; cursor: pointer;">
-                <span style="color: #333; font-weight: 500;">Active</span>
-            </label>
         </div>
 
         <div style="display: flex; gap: 15px; margin-top: 30px;">
@@ -169,13 +104,7 @@
         // Restore original values
         document.getElementById('raw_material_name').value = '{{ addslashes($rawMaterial->raw_material_name) }}';
         document.getElementById('unit_of_measure').value = '{{ addslashes($rawMaterial->unit_of_measure) }}';
-        document.getElementById('quantity_available').value = '{{ $rawMaterial->quantity_available }}';
         document.getElementById('reorder_level').value = '{{ $rawMaterial->reorder_level }}';
-        document.getElementById('supplier_id').value = '{{ $rawMaterial->supplier_id ?? '' }}';
-        document.getElementById('price_per_unit').value = '{{ $rawMaterial->price_per_unit }}';
-        document.getElementById('gst_percentage').value = '{{ $rawMaterial->gst_percentage }}';
-        document.getElementById('description').value = '{{ addslashes($rawMaterial->description ?? '') }}';
-        document.querySelector('input[name="is_active"]').checked = {{ $rawMaterial->is_active ? 'true' : 'false' }};
     }
 </script>
 @endpush

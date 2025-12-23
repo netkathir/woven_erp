@@ -5,7 +5,7 @@
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 25px;">
     <div>
         <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #333;">Purchase Order Number</label>
-        <input type="text" class="form-control" value="{{ $editing ? $purchaseOrder->po_number : 'Auto Generated' }}" disabled
+        <input type="text" class="form-control" value="{{ $editing ? $purchaseOrder->po_number : 'Auto-generated (PUR001, PUR002, etc.)' }}" disabled
             style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd; background: #f5f5f5;">
     </div>
 
@@ -16,6 +16,7 @@
             <option value="">-- Select Supplier --</option>
             @foreach($suppliers as $supplier)
                 <option value="{{ $supplier->id }}"
+                    data-state="{{ $supplier->state ?? '' }}"
                     {{ old('supplier_id', $editing ? $purchaseOrder->supplier_id : '') == $supplier->id ? 'selected' : '' }}>
                     {{ $supplier->supplier_name }} ({{ $supplier->code }})
                 </option>
@@ -47,20 +48,10 @@
     </div>
 
     <div>
-        <label for="gst_percentage_overall" style="display: block; margin-bottom: 6px; font-weight: 600; color: #333;">GST Percentage (Overall)</label>
-        <input type="number" step="0.01" name="gst_percentage_overall" id="gst_percentage_overall"
-               value="{{ old('gst_percentage_overall', $editing ? $purchaseOrder->gst_percentage_overall : '') }}"
-               style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
-        @error('gst_percentage_overall')
-            <div style="color: red; font-size: 13px; margin-top: 4px;">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <div>
         <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #333;">GST Classification</label>
         <input type="text" id="gst_classification_view" disabled
-               value="@if($editing && $purchaseOrder->gst_classification) {{ $purchaseOrder->gst_classification === 'CGST_SGST' ? 'CGST + SGST' : 'IGST' }} @endif"
-               placeholder="Auto based on supplier and company state"
+               value="@if($editing && $purchaseOrder->gst_classification) {{ $purchaseOrder->gst_classification === 'CGST_SGST' ? 'CGST + SGST' : 'IGST' }} @else Auto-select based on supplier and company location @endif"
+               placeholder="Auto-select based on supplier and company location"
                style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd; background: #f5f5f5;">
     </div>
 </div>
@@ -176,6 +167,36 @@
 
 @push('scripts')
 <script>
+    // Company state from server
+    var companyState = @json($companyInfo->state ?? '');
+
+    function updateGstClassification() {
+        var supplierSelect = document.getElementById('supplier_id');
+        var gstClassificationView = document.getElementById('gst_classification_view');
+        
+        if (!supplierSelect || !gstClassificationView) return;
+        
+        var selectedOption = supplierSelect.options[supplierSelect.selectedIndex];
+        if (!selectedOption || !selectedOption.value) {
+            gstClassificationView.value = 'Auto-select based on supplier and company location';
+            return;
+        }
+        
+        var supplierState = selectedOption.getAttribute('data-state') || '';
+        
+        if (!companyState || !supplierState) {
+            gstClassificationView.value = 'Unable to determine (missing state information)';
+            return;
+        }
+        
+        // Compare states (case-insensitive)
+        if (companyState.toLowerCase() === supplierState.toLowerCase()) {
+            gstClassificationView.value = 'CGST + SGST';
+        } else {
+            gstClassificationView.value = 'IGST';
+        }
+    }
+
     function parseNumber(value) {
         var n = parseFloat(value);
         return isNaN(n) ? 0 : n;
@@ -299,6 +320,16 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Initialize GST Classification
+        updateGstClassification();
+        
+        // Update GST Classification when supplier changes
+        var supplierSelect = document.getElementById('supplier_id');
+        if (supplierSelect) {
+            supplierSelect.addEventListener('change', updateGstClassification);
+        }
+        
+        // Initialize item rows
         var rows = document.querySelectorAll('#itemsTable tbody tr');
         rows.forEach(function (row) {
             attachRowEvents(row);

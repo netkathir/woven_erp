@@ -14,22 +14,9 @@ class Product extends Model
         'product_name',
         'code',
         'unit_of_measure',
-        'product_category',
-        'price_per_unit',
-        'stock_quantity',
-        'gst_percentage',
-        'description',
-        'is_active',
         'organization_id',
         'branch_id',
         'created_by',
-    ];
-
-    protected $casts = [
-        'price_per_unit' => 'decimal:2',
-        'stock_quantity' => 'decimal:2',
-        'gst_percentage' => 'decimal:2',
-        'is_active' => 'boolean',
     ];
 
     /**

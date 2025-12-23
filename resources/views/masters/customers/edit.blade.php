@@ -30,10 +30,18 @@
             <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Basic Information</h3>
             
             <div style="margin-bottom: 20px;">
-                <label for="customer_name" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Customer Name <span style="color: red;">*</span></label>
+                <label style="display: block; margin-bottom: 8px; color: #666; font-weight: 500;">Customer ID</label>
+                <div style="padding: 12px; background: #e9ecef; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; color: #333; font-weight: 500;">
+                    {{ $customer->code }}
+                </div>
+                <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Customer ID cannot be changed</small>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="customer_name" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Customer/Company Name <span style="color: red;">*</span></label>
                 <input type="text" name="customer_name" id="customer_name" value="{{ old('customer_name', $customer->customer_name) }}" required
                     style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
-                    placeholder="Enter customer name">
+                    placeholder="Enter customer or company name">
                 @error('customer_name')
                     <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
                 @enderror
@@ -141,9 +149,22 @@
 
             <div>
                 <label for="billing_country" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Country</label>
-                <input type="text" name="billing_country" id="billing_country" value="{{ old('billing_country', $customer->billing_country) }}"
-                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
-                    placeholder="Enter country">
+                <select name="billing_country" id="billing_country"
+                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; background: #fff;">
+                    <option value="">Select country</option>
+                    @php
+                        $countries = [
+                            'India', 'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
+                            'Japan', 'China', 'Brazil', 'Russia', 'South Korea', 'Italy', 'Spain', 'Mexico',
+                            'Indonesia', 'Netherlands', 'Saudi Arabia', 'Turkey', 'Switzerland', 'Singapore',
+                            'Malaysia', 'Thailand', 'Philippines', 'Vietnam', 'Bangladesh', 'Pakistan', 'Sri Lanka',
+                            'Nepal', 'Myanmar', 'Other'
+                        ];
+                    @endphp
+                    @foreach($countries as $country)
+                        <option value="{{ $country }}" {{ old('billing_country', $customer->billing_country) === $country ? 'selected' : '' }}>{{ $country }}</option>
+                    @endforeach
+                </select>
                 @error('billing_country')
                     <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
                 @enderror
@@ -216,9 +237,22 @@
 
             <div>
                 <label for="shipping_country" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Country</label>
-                <input type="text" name="shipping_country" id="shipping_country" value="{{ old('shipping_country', $customer->shipping_country) }}"
-                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
-                    placeholder="Enter country">
+                <select name="shipping_country" id="shipping_country"
+                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; background: #fff;">
+                    <option value="">Select country</option>
+                    @php
+                        $countries = [
+                            'India', 'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
+                            'Japan', 'China', 'Brazil', 'Russia', 'South Korea', 'Italy', 'Spain', 'Mexico',
+                            'Indonesia', 'Netherlands', 'Saudi Arabia', 'Turkey', 'Switzerland', 'Singapore',
+                            'Malaysia', 'Thailand', 'Philippines', 'Vietnam', 'Bangladesh', 'Pakistan', 'Sri Lanka',
+                            'Nepal', 'Myanmar', 'Other'
+                        ];
+                    @endphp
+                    @foreach($countries as $country)
+                        <option value="{{ $country }}" {{ old('shipping_country', $customer->shipping_country) === $country ? 'selected' : '' }}>{{ $country }}</option>
+                    @endforeach
+                </select>
                 @error('shipping_country')
                     <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
                 @enderror
@@ -228,33 +262,6 @@
         <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
             <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Business Information</h3>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                <div>
-                    <label for="payment_terms" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Payment Terms <span style="color: red;">*</span></label>
-                    <select name="payment_terms" id="payment_terms" required
-                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; background: #fff;">
-                        <option value="">Select payment terms</option>
-                        <option value="cash" {{ old('payment_terms', $customer->payment_terms) === 'cash' ? 'selected' : '' }}>Cash</option>
-                        <option value="credit" {{ old('payment_terms', $customer->payment_terms) === 'credit' ? 'selected' : '' }}>Credit</option>
-                        <option value="advance" {{ old('payment_terms', $customer->payment_terms) === 'advance' ? 'selected' : '' }}>Advance</option>
-                        <option value="partial" {{ old('payment_terms', $customer->payment_terms) === 'partial' ? 'selected' : '' }}>Partial</option>
-                        <option value="other" {{ old('payment_terms', $customer->payment_terms) === 'other' ? 'selected' : '' }}>Other</option>
-                    </select>
-                    @error('payment_terms')
-                        <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label for="credit_limit" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Credit Limit</label>
-                    <input type="number" name="credit_limit" id="credit_limit" value="{{ old('credit_limit', $customer->credit_limit) }}" step="0.01" min="0"
-                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
-                        placeholder="0.00">
-                    @error('credit_limit')
-                        <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                    @enderror
-                </div>
-            </div>
-
             <div style="margin-bottom: 20px;">
                 <label for="gst_number" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">GST Number</label>
                 <input type="text" name="gst_number" id="gst_number" value="{{ old('gst_number', $customer->gst_number) }}"
@@ -263,24 +270,6 @@
                 @error('gst_number')
                     <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
                 @enderror
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label for="notes" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Notes</label>
-                <textarea name="notes" id="notes" rows="3"
-                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; resize: vertical;"
-                    placeholder="Enter any additional notes (optional)">{{ old('notes', $customer->notes) }}</textarea>
-                @error('notes')
-                    <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $customer->is_active) ? 'checked' : '' }}
-                        style="width: 18px; height: 18px; cursor: pointer;">
-                    <span style="color: #333; font-weight: 500;">Active</span>
-                </label>
             </div>
         </div>
 
@@ -351,11 +340,7 @@
         document.getElementById('shipping_state').value = '{{ addslashes($customer->shipping_state ?? '') }}';
         document.getElementById('shipping_postal_code').value = '{{ addslashes($customer->shipping_postal_code ?? '') }}';
         document.getElementById('shipping_country').value = '{{ addslashes($customer->shipping_country ?? '') }}';
-        document.getElementById('payment_terms').value = '{{ $customer->payment_terms }}';
         document.getElementById('gst_number').value = '{{ addslashes($customer->gst_number ?? '') }}';
-        document.getElementById('credit_limit').value = '{{ $customer->credit_limit }}';
-        document.getElementById('notes').value = '{{ addslashes($customer->notes ?? '') }}';
-        document.querySelector('input[name="is_active"]').checked = {{ $customer->is_active ? 'true' : 'false' }};
         
         // Re-check if addresses match after reset
         setTimeout(checkIfAddressesMatch, 100);
@@ -372,6 +357,22 @@
             document.getElementById('shipping_country').value = document.getElementById('billing_country').value;
         }
     }
+    
+    // Also copy when billing fields change if checkbox is checked
+    document.addEventListener('DOMContentLoaded', function() {
+        const billingFields = ['billing_address_line_1', 'billing_address_line_2', 'billing_city', 'billing_state', 'billing_postal_code', 'billing_country'];
+        billingFields.forEach(function(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('change', function() {
+                    if (document.getElementById('same_as_billing').checked) {
+                        const shippingFieldId = fieldId.replace('billing_', 'shipping_');
+                        document.getElementById(shippingFieldId).value = field.value;
+                    }
+                });
+            }
+        });
+    });
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
