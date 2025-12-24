@@ -82,14 +82,7 @@ class SupplierController extends Controller
     public function create(): View
     {
         $this->checkWritePermission('suppliers');
-        $activeBranchId = session('active_branch_id');
-        $companyInfo = null;
-        if ($activeBranchId) {
-            $companyInfo = \App\Models\CompanyInformation::where('branch_id', $activeBranchId)->first();
-        } else {
-            $companyInfo = \App\Models\CompanyInformation::first();
-        }
-        return view('masters.suppliers.create', compact('companyInfo'));
+        return view('masters.suppliers.create');
     }
 
     /**
@@ -110,7 +103,6 @@ class SupplierController extends Controller
             'postal_code' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
             'gst_number' => 'nullable|string|max:50',
-            'tax_type' => 'nullable|in:Intra-State,Inter-State',
         ], [
             'supplier_name.required' => 'Supplier Name is required.',
             'supplier_name.max' => 'Supplier Name must not exceed 255 characters.',
@@ -175,7 +167,6 @@ class SupplierController extends Controller
             'postal_code' => $request->postal_code,
             'country' => $request->country,
             'gst_number' => $request->gst_number,
-            'tax_type' => $request->tax_type,
             'bank_name' => $request->bank_name,
             'ifsc_code' => $request->ifsc_code,
             'account_number' => $request->account_number,
@@ -205,14 +196,7 @@ class SupplierController extends Controller
     public function edit(Supplier $supplier): View
     {
         $this->checkWritePermission('suppliers');
-        $activeBranchId = session('active_branch_id');
-        $companyInfo = null;
-        if ($activeBranchId) {
-            $companyInfo = \App\Models\CompanyInformation::where('branch_id', $activeBranchId)->first();
-        } else {
-            $companyInfo = \App\Models\CompanyInformation::first();
-        }
-        return view('masters.suppliers.edit', compact('supplier', 'companyInfo'));
+        return view('masters.suppliers.edit', compact('supplier'));
     }
 
     /**
@@ -233,7 +217,6 @@ class SupplierController extends Controller
             'postal_code' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
             'gst_number' => 'nullable|string|max:50',
-            'tax_type' => 'nullable|in:Intra-State,Inter-State',
             'bank_name' => 'nullable|string|max:255',
             'ifsc_code' => 'nullable|string|max:11',
             'account_number' => 'nullable|string|max:50',
@@ -272,7 +255,6 @@ class SupplierController extends Controller
             'postal_code' => $request->postal_code,
             'country' => $request->country,
             'gst_number' => $request->gst_number,
-            'tax_type' => $request->tax_type,
             'bank_name' => $request->bank_name,
             'ifsc_code' => $request->ifsc_code,
             'account_number' => $request->account_number,

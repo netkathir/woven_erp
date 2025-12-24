@@ -176,28 +176,14 @@
         <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
             <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Business Information</h3>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                <div>
-                    <label for="gst_number" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">GST Number</label>
-                    <input type="text" name="gst_number" id="gst_number" value="{{ old('gst_number') }}"
-                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
-                        placeholder="Enter GST number (if applicable)">
-                    @error('gst_number')
-                        <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label for="tax_type" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Tax Type</label>
-                    <select name="tax_type" id="tax_type"
-                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; background: #fff;">
-                        <option value="">Select Tax Type</option>
-                        <option value="Intra-State" {{ old('tax_type') === 'Intra-State' ? 'selected' : '' }}>Intra-State (CGST + SGST)</option>
-                        <option value="Inter-State" {{ old('tax_type') === 'Inter-State' ? 'selected' : '' }}>Inter-State (IGST)</option>
-                    </select>
-                    @error('tax_type')
-                        <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                    @enderror
-                </div>
+            <div style="margin-bottom: 20px;">
+                <label for="gst_number" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">GST Number</label>
+                <input type="text" name="gst_number" id="gst_number" value="{{ old('gst_number') }}"
+                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
+                    placeholder="Enter GST number (if applicable)">
+                @error('gst_number')
+                    <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
+                @enderror
             </div>
         </div>
 
@@ -267,36 +253,6 @@
         document.getElementById('supplierForm').reset();
     }
 
-    // Get company state from server
-    const companyState = @json($companyInfo->state ?? null);
-
-    // Auto-select tax type based on company and supplier state
-    function updateTaxType() {
-        const supplierState = document.getElementById('state').value;
-        const taxTypeSelect = document.getElementById('tax_type');
-        
-        if (companyState && supplierState && taxTypeSelect) {
-            if (companyState === supplierState) {
-                // Same state - Intra-State
-                taxTypeSelect.value = 'Intra-State';
-            } else {
-                // Different state - Inter-State
-                taxTypeSelect.value = 'Inter-State';
-            }
-        }
-    }
-
-    // Listen for state change
-    document.addEventListener('DOMContentLoaded', function() {
-        const stateSelect = document.getElementById('state');
-        if (stateSelect) {
-            stateSelect.addEventListener('change', updateTaxType);
-            // Also check on page load if state is already selected
-            if (stateSelect.value) {
-                updateTaxType();
-            }
-        }
-    });
 </script>
 @endpush
 @endsection
