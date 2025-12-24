@@ -55,13 +55,13 @@
                 <thead>
                     <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">S.No</th>
-                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Code</th>
+                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Employee ID</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Employee Name</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Designation</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Department</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Phone</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Email</th>
-                        <th style="padding: 12px; text-align: center; color: #333; font-weight: 600;">Status</th>
+                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Joining Date</th>
                         <th style="padding: 12px; text-align: center; color: #333; font-weight: 600;">Actions</th>
                     </tr>
                 </thead>
@@ -75,13 +75,7 @@
                             <td style="padding: 12px; color: #666;">{{ $employee->department ? ucfirst($employee->department) : 'N/A' }}</td>
                             <td style="padding: 12px; color: #666;">{{ $employee->phone_number ?? 'N/A' }}</td>
                             <td style="padding: 12px; color: #666;">{{ $employee->email ?? 'N/A' }}</td>
-                            <td style="padding: 12px; text-align: center;">
-                                @if($employee->is_active)
-                                    <span style="padding: 4px 12px; background: #d4edda; color: #155724; border-radius: 12px; font-size: 12px;">Active</span>
-                                @else
-                                    <span style="padding: 4px 12px; background: #f8d7da; color: #721c24; border-radius: 12px; font-size: 12px;">Inactive</span>
-                                @endif
-                            </td>
+                            <td style="padding: 12px; color: #666;">{{ $employee->joining_date ? $employee->joining_date->format('d M Y') : 'N/A' }}</td>
                             <td style="padding: 12px; text-align: center;">
                                 <div style="display: flex; gap: 8px; justify-content: center;">
                                     @if($canRead)

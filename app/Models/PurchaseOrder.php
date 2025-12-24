@@ -15,7 +15,6 @@ class PurchaseOrder extends Model
         'supplier_id',
         'purchase_date',
         'delivery_date',
-        'gst_percentage_overall',
         'gst_classification',
         'total_raw_material_amount',
         'total_gst_amount',
@@ -28,7 +27,6 @@ class PurchaseOrder extends Model
     protected $casts = [
         'purchase_date' => 'date',
         'delivery_date' => 'date',
-        'gst_percentage_overall' => 'decimal:2',
         'total_raw_material_amount' => 'decimal:2',
         'total_gst_amount' => 'decimal:2',
         'grand_total' => 'decimal:2',

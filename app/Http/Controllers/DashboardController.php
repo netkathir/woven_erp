@@ -60,24 +60,40 @@ class DashboardController extends Controller
 
     /**
      * Get count for a model with branch filtering
+     * Shows all records including those with NULL branch_id
      */
     private function getCount($modelClass)
     {
-        $query = $modelClass::query();
-        
-        // Apply branch filter if applicable
-        $user = auth()->user();
-        $branchId = session('active_branch_id');
-        
-        if ($branchId && method_exists($this, 'applyBranchFilter')) {
+        try {
+            $query = $modelClass::query();
+            
+            // Apply branch filter if applicable
+            $branchId = session('active_branch_id');
+            
+            // Check if model has branch_id column
+            $modelInstance = new $modelClass;
+            $tableName = $modelInstance->getTable();
+            
+            if ($branchId && Schema::hasColumn($tableName, 'branch_id')) {
+                // Include records that match the branch OR have NULL branch_id (shared/master data)
+                $query->where(function($q) use ($tableName, $branchId) {
+                    $q->where($tableName . '.branch_id', $branchId)
+                      ->orWhereNull($tableName . '.branch_id');
+                });
+            }
+            
+            // Note: Soft-deleted records are automatically excluded by Eloquent
+            // when using SoftDeletes trait
+            
+            return $query->count();
+        } catch (\Exception $e) {
+            // If there's an error, try to get count without branch filter
             try {
-                $query = $this->applyBranchFilter($query, $modelClass);
-            } catch (\Exception $e) {
-                // If branch filter fails, continue without filter
+                return $modelClass::count();
+            } catch (\Exception $e2) {
+                return 0;
             }
         }
-        
-        return $query->count();
     }
 
     /**

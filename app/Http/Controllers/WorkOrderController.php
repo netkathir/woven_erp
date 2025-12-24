@@ -3,13 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\WorkOrder;
-use App\Models\WorkOrderMaterial;
 use App\Models\Customer;
 use App\Models\Product;
-use App\Models\RawMaterial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 
 class WorkOrderController extends Controller
 {
@@ -40,24 +37,51 @@ class WorkOrderController extends Controller
     {
         $customers = Customer::orderBy('customer_name')->get();
         $products = Product::orderBy('product_name')->get();
-        $rawMaterials = RawMaterial::where('is_active', true)->orderBy('raw_material_name')->get();
 
-        return view('transactions.work-orders.create', compact('customers', 'products', 'rawMaterials'));
+        return view('transactions.work-orders.create', compact('customers', 'products'));
     }
 
     public function store(Request $request)
     {
         $data = $this->validateRequest($request);
 
-        $workOrderNumber = 'WO-' . strtoupper(Str::random(8));
+        // Generate sequential Work Order Number starting from WON001
+        $allWorkOrders = WorkOrder::withTrashed()
+            ->where('work_order_number', 'like', 'WON%')
+            ->get();
+
+        $maxNumber = 0;
+        foreach ($allWorkOrders as $wo) {
+            // Extract number from code (e.g., WON001 -> 1, WON123 -> 123)
+            if (preg_match('/^WON(\d+)$/i', $wo->work_order_number, $matches)) {
+                $number = (int)$matches[1];
+                if ($number > $maxNumber) {
+                    $maxNumber = $number;
+                }
+            }
+        }
+
+        // Next number is max + 1, starting from 1 if no work orders exist
+        $nextNumber = $maxNumber + 1;
+
+        // Format as WON001, WON002, etc. (3 digits with leading zeros)
+        $workOrderNumber = 'WON' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+
+        // Safety check: if code exists (shouldn't happen, but just in case), find next available
+        $maxAttempts = 10000;
+        $attempts = 0;
+        while (WorkOrder::withTrashed()->where('work_order_number', $workOrderNumber)->exists() && $attempts < $maxAttempts) {
+            $nextNumber++;
+            $workOrderNumber = 'WON' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+            $attempts++;
+        }
 
         $workOrder = new WorkOrder();
         $workOrder->fill([
             'work_order_number' => $workOrderNumber,
-            'customer_id' => $data['customer_id'] ?? null,
-            'product_id' => $data['product_id'] ?? null,
+            'customer_id' => $data['customer_id'],
+            'product_id' => $data['product_id'],
             'quantity_to_produce' => $data['quantity_to_produce'],
-            'work_order_type' => $data['work_order_type'],
             'work_order_date' => $data['work_order_date'],
             'status' => WorkOrder::STATUS_OPEN,
         ]);
@@ -70,8 +94,6 @@ class WorkOrderController extends Controller
         }
 
         $workOrder->save();
-
-        $this->saveMaterials($workOrder, $data['materials']);
 
         return redirect()->route('work-orders.index')
             ->with('success', 'Work Order created successfully.');
@@ -87,35 +109,28 @@ class WorkOrderController extends Controller
     {
         $customers = Customer::orderBy('customer_name')->get();
         $products = Product::orderBy('product_name')->get();
-        $rawMaterials = RawMaterial::where('is_active', true)->orderBy('raw_material_name')->get();
 
-        $workOrder->load('materials');
-
-        return view('transactions.work-orders.edit', compact('workOrder', 'customers', 'products', 'rawMaterials'));
+        return view('transactions.work-orders.edit', compact('workOrder', 'customers', 'products'));
     }
 
     public function update(Request $request, WorkOrder $workOrder)
     {
         $data = $this->validateRequest($request);
 
-        $workOrder->customer_id = $data['customer_id'] ?? null;
-        $workOrder->product_id = $data['product_id'] ?? null;
+        $workOrder->customer_id = $data['customer_id'];
+        $workOrder->product_id = $data['product_id'];
         $workOrder->quantity_to_produce = $data['quantity_to_produce'];
-        $workOrder->work_order_type = $data['work_order_type'];
         $workOrder->work_order_date = $data['work_order_date'];
 
-        // Auto update status: completed if total consumption >= quantity_to_produce (simple rule)
-        $totalConsumption = $this->calculateTotalConsumption($data['materials']);
-        if ($totalConsumption >= (float) $workOrder->quantity_to_produce && $workOrder->quantity_to_produce > 0) {
+        // Auto update status: completed if total production quantity >= quantity_to_produce
+        $totalProducedQuantity = $workOrder->productions()->sum('produced_quantity');
+        if ($totalProducedQuantity >= (float) $workOrder->quantity_to_produce && $workOrder->quantity_to_produce > 0) {
             $workOrder->status = WorkOrder::STATUS_COMPLETED;
         } else {
             $workOrder->status = WorkOrder::STATUS_OPEN;
         }
 
         $workOrder->save();
-
-        $workOrder->materials()->delete();
-        $this->saveMaterials($workOrder, $data['materials']);
 
         return redirect()->route('work-orders.index')
             ->with('success', 'Work Order updated successfully.');
@@ -132,48 +147,11 @@ class WorkOrderController extends Controller
     protected function validateRequest(Request $request): array
     {
         return $request->validate([
-            'customer_id' => ['nullable', 'exists:customers,id'],
-            'product_id' => ['nullable', 'exists:products,id'],
+            'customer_id' => ['required', 'exists:customers,id'],
+            'product_id' => ['required', 'exists:products,id'],
             'quantity_to_produce' => ['required', 'numeric', 'min:0.0001'],
-            'work_order_type' => ['required', 'in:customer_order,internal'],
             'work_order_date' => ['required', 'date'],
-
-            'materials' => ['required', 'array', 'min:1'],
-            'materials.*.raw_material_id' => ['required', 'exists:raw_materials,id'],
-            'materials.*.material_required' => ['required', 'numeric', 'min:0.0001'],
-            'materials.*.consumption' => ['nullable', 'numeric', 'min:0'],
-            'materials.*.unit_of_measure' => ['required', 'string', 'max:191'],
         ]);
-    }
-
-    protected function saveMaterials(WorkOrder $workOrder, array $materials): void
-    {
-        foreach ($materials as $material) {
-            $required = (float) $material['material_required'];
-            $consumption = array_key_exists('consumption', $material) && $material['consumption'] !== null
-                ? (float) $material['consumption']
-                : $required; // auto-calculated = required by default
-
-            WorkOrderMaterial::create([
-                'work_order_id' => $workOrder->id,
-                'raw_material_id' => $material['raw_material_id'],
-                'material_required' => $required,
-                'consumption' => $consumption,
-                'unit_of_measure' => $material['unit_of_measure'],
-            ]);
-        }
-    }
-
-    protected function calculateTotalConsumption(array $materials): float
-    {
-        $total = 0;
-        foreach ($materials as $material) {
-            $consumption = array_key_exists('consumption', $material) && $material['consumption'] !== null
-                ? (float) $material['consumption']
-                : (float) $material['material_required'];
-            $total += $consumption;
-        }
-        return $total;
     }
 }
 

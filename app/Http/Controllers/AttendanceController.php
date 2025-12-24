@@ -15,9 +15,8 @@ class AttendanceController extends Controller
     {
         $selectedDate = $request->get('date', now()->format('Y-m-d'));
         
-        // Get all active employees for the selected date
-        $availableEmployees = Employee::where('is_active', true)
-            ->orderBy('employee_name')
+        // Get all employees for the selected date
+        $availableEmployees = Employee::orderBy('employee_name')
             ->get();
 
         // Get attendance records for the selected date
@@ -49,9 +48,8 @@ class AttendanceController extends Controller
     {
         $selectedDate = request()->get('date', now()->format('Y-m-d'));
         
-        // Get all active employees
-        $availableEmployees = Employee::where('is_active', true)
-            ->orderBy('employee_name')
+        // Get all employees
+        $availableEmployees = Employee::orderBy('employee_name')
             ->get();
 
         // Get existing attendance for the date
@@ -84,30 +82,39 @@ class AttendanceController extends Controller
         $date = $request->date;
         $absenteeIds = $request->absentees ?? [];
 
-        // Get all active employees
-        $allEmployees = Employee::where('is_active', true)->pluck('id');
+        // Get all employees
+        $allEmployees = Employee::pluck('id');
 
         $user = Auth::user();
         $organizationId = $user->organization_id ?? null;
         $branchId = session('active_branch_id');
         $createdBy = $user->id;
 
-        // Delete existing attendance records for this date
-        Attendance::whereDate('date', $date)->delete();
+        // Use updateOrCreate to handle unique constraint properly
+        // First, permanently delete any soft-deleted records for this date to avoid unique constraint issues
+        Attendance::withTrashed()
+            ->whereDate('date', $date)
+            ->forceDelete();
 
-        // Create attendance records
-        foreach ($allEmployees as $employeeId) {
-            $status = in_array($employeeId, $absenteeIds) ? 'Absent' : 'Present';
-            
-            Attendance::create([
-                'date' => $date,
-                'employee_id' => $employeeId,
-                'status' => $status,
-                'organization_id' => $organizationId,
-                'branch_id' => $branchId,
-                'created_by' => $createdBy,
-            ]);
-        }
+        // Then use updateOrCreate to update existing records or create new ones
+        DB::transaction(function () use ($date, $allEmployees, $absenteeIds, $organizationId, $branchId, $createdBy) {
+            foreach ($allEmployees as $employeeId) {
+                $status = in_array($employeeId, $absenteeIds) ? 'Absent' : 'Present';
+                
+                Attendance::updateOrCreate(
+                    [
+                        'date' => $date,
+                        'employee_id' => $employeeId,
+                    ],
+                    [
+                        'status' => $status,
+                        'organization_id' => $organizationId,
+                        'branch_id' => $branchId,
+                        'created_by' => $createdBy,
+                    ]
+                );
+            }
+        });
 
         return redirect()->route('attendances.index', ['date' => $date])
             ->with('success', 'Attendance recorded successfully.');
@@ -123,9 +130,8 @@ class AttendanceController extends Controller
     {
         $selectedDate = $date;
         
-        // Get all active employees
-        $availableEmployees = Employee::where('is_active', true)
-            ->orderBy('employee_name')
+        // Get all employees
+        $availableEmployees = Employee::orderBy('employee_name')
             ->get();
 
         // Get existing attendance for the date
@@ -157,30 +163,39 @@ class AttendanceController extends Controller
 
         $absenteeIds = $request->absentees ?? [];
 
-        // Get all active employees
-        $allEmployees = Employee::where('is_active', true)->pluck('id');
-
-        // Delete existing attendance records for this date
-        Attendance::whereDate('date', $date)->delete();
+        // Get all employees
+        $allEmployees = Employee::pluck('id');
 
         $user = Auth::user();
         $organizationId = $user->organization_id ?? null;
         $branchId = session('active_branch_id');
         $createdBy = $user->id;
 
-        // Create attendance records
-        foreach ($allEmployees as $employeeId) {
-            $status = in_array($employeeId, $absenteeIds) ? 'Absent' : 'Present';
-            
-            Attendance::create([
-                'date' => $date,
-                'employee_id' => $employeeId,
-                'status' => $status,
-                'organization_id' => $organizationId,
-                'branch_id' => $branchId,
-                'created_by' => $createdBy,
-            ]);
-        }
+        // Use updateOrCreate to handle unique constraint properly
+        // First, permanently delete any soft-deleted records for this date to avoid unique constraint issues
+        Attendance::withTrashed()
+            ->whereDate('date', $date)
+            ->forceDelete();
+
+        // Then use updateOrCreate to update existing records or create new ones
+        DB::transaction(function () use ($date, $allEmployees, $absenteeIds, $organizationId, $branchId, $createdBy) {
+            foreach ($allEmployees as $employeeId) {
+                $status = in_array($employeeId, $absenteeIds) ? 'Absent' : 'Present';
+                
+                Attendance::updateOrCreate(
+                    [
+                        'date' => $date,
+                        'employee_id' => $employeeId,
+                    ],
+                    [
+                        'status' => $status,
+                        'organization_id' => $organizationId,
+                        'branch_id' => $branchId,
+                        'created_by' => $createdBy,
+                    ]
+                );
+            }
+        });
 
         return redirect()->route('attendances.index', ['date' => $date])
             ->with('success', 'Attendance updated successfully.');
@@ -219,7 +234,7 @@ class AttendanceController extends Controller
         $attendances = $query->get();
 
         // Get all employees for dropdown
-        $employees = Employee::where('is_active', true)->orderBy('employee_name')->get();
+        $employees = Employee::orderBy('employee_name')->get();
 
         // Calculate statistics
         $totalRecords = $attendances->count();

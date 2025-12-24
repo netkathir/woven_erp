@@ -37,15 +37,15 @@ class TaskController extends Controller
         }
 
         $tasks = $query->paginate(15)->withQueryString();
-        $employees = Employee::where('is_active', true)->orderBy('employee_name')->get();
+        $employees = Employee::orderBy('employee_name')->get();
 
         return view('crm.tasks.index', compact('tasks', 'employees'));
     }
 
     public function create()
     {
-        $employees = Employee::where('is_active', true)->orderBy('employee_name')->get();
-        $customers = Customer::where('is_active', true)->orderBy('customer_name')->get();
+        $employees = Employee::orderBy('employee_name')->get();
+        $customers = Customer::orderBy('customer_name')->get();
         return view('crm.tasks.create', compact('employees', 'customers'));
     }
 
@@ -94,8 +94,8 @@ class TaskController extends Controller
 
     public function edit(Task $task)
     {
-        $employees = Employee::where('is_active', true)->orderBy('employee_name')->get();
-        $customers = Customer::where('is_active', true)->orderBy('customer_name')->get();
+        $employees = Employee::orderBy('employee_name')->get();
+        $customers = Customer::orderBy('customer_name')->get();
         return view('crm.tasks.edit', compact('task', 'employees', 'customers'));
     }
 

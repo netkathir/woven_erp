@@ -34,10 +34,6 @@
             <div style="font-weight: 600; color: #111827;">{{ optional($purchaseOrder->delivery_date)->format('d-m-Y') ?: '-' }}</div>
         </div>
         <div>
-            <div style="font-size: 13px; color: #6b7280;">GST Percentage (Overall)</div>
-            <div style="font-weight: 600; color: #111827;">{{ $purchaseOrder->gst_percentage_overall !== null ? $purchaseOrder->gst_percentage_overall . '%' : '-' }}</div>
-        </div>
-        <div>
             <div style="font-size: 13px; color: #6b7280;">GST Classification</div>
             <div style="font-weight: 600; color: #111827;">
                 @if($purchaseOrder->gst_classification === 'CGST_SGST')

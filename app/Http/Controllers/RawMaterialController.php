@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\RawMaterial;
-use App\Models\Supplier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -22,7 +21,7 @@ class RawMaterialController extends Controller
     {
         $user = auth()->user();
         
-        $query = RawMaterial::with('supplier');
+        $query = RawMaterial::query();
         
         // Filter by organization/branch if needed
         if ($user->organization_id) {
@@ -54,9 +53,6 @@ class RawMaterialController extends Controller
             case 'code':
                 $query->orderBy('code', $sortOrder);
                 break;
-            case 'quantity_available':
-                $query->orderBy('quantity_available', $sortOrder);
-                break;
             case 'created_at':
                 $query->orderBy('created_at', $sortOrder);
                 break;
@@ -75,8 +71,7 @@ class RawMaterialController extends Controller
      */
     public function create(): View
     {
-        $suppliers = Supplier::where('is_active', true)->orderBy('supplier_name')->get();
-        return view('masters.raw-materials.create', compact('suppliers'));
+        return view('masters.raw-materials.create');
     }
 
     /**
@@ -87,96 +82,59 @@ class RawMaterialController extends Controller
         $request->validate([
             'raw_material_name' => 'required|string|max:255',
             'unit_of_measure' => 'required|string|max:50',
-            'quantity_available' => 'required|numeric|min:0',
             'reorder_level' => 'required|numeric|min:0',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'price_per_unit' => 'required|numeric|min:0',
-            'gst_percentage' => 'nullable|numeric|min:0|max:100',
-            'description' => 'nullable|string',
         ], [
             'raw_material_name.required' => 'Raw Material Name is required.',
             'raw_material_name.max' => 'Raw Material Name must not exceed 255 characters.',
             'unit_of_measure.required' => 'Unit of Measure is required.',
             'unit_of_measure.max' => 'Unit of Measure must not exceed 50 characters.',
-            'quantity_available.required' => 'Quantity Available is required.',
-            'quantity_available.numeric' => 'Quantity Available must be a number.',
-            'quantity_available.min' => 'Quantity Available must be at least 0.',
             'reorder_level.required' => 'Reorder Level is required.',
             'reorder_level.numeric' => 'Reorder Level must be a number.',
             'reorder_level.min' => 'Reorder Level must be at least 0.',
-            'supplier_id.exists' => 'Selected Supplier does not exist.',
-            'price_per_unit.required' => 'Price per Unit is required.',
-            'price_per_unit.numeric' => 'Price per Unit must be a number.',
-            'price_per_unit.min' => 'Price per Unit must be at least 0.',
-            'gst_percentage.numeric' => 'GST Percentage must be a number.',
-            'gst_percentage.min' => 'GST Percentage must be at least 0.',
-            'gst_percentage.max' => 'GST Percentage must not exceed 100.',
         ]);
 
-        // Generate unique code
-        $baseCode = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $request->raw_material_name), 0, 10));
-        
-        // Ensure base code is not empty
-        if (empty($baseCode)) {
-            $baseCode = 'RM' . strtoupper(substr(md5($request->raw_material_name), 0, 7));
+        // Generate sequential Raw Material ID starting from RM001
+        $allRawMaterials = RawMaterial::withTrashed()
+            ->where('code', 'like', 'RM%')
+            ->get();
+
+        $maxNumber = 0;
+        foreach ($allRawMaterials as $rawMaterial) {
+            // Extract number from code (e.g., RM001 -> 1, RM123 -> 123)
+            if (preg_match('/^RM(\d+)$/i', $rawMaterial->code, $matches)) {
+                $number = (int)$matches[1];
+                if ($number > $maxNumber) {
+                    $maxNumber = $number;
+                }
+            }
         }
+
+        // Next number is max + 1, starting from 1 if no raw materials exist
+        $nextNumber = $maxNumber + 1;
         
-        $code = $baseCode;
-        $counter = 1;
-        $maxAttempts = 1000;
-        
-        // Check for existing code including soft-deleted records
-        while (RawMaterial::withTrashed()->where('code', $code)->exists() && $counter < $maxAttempts) {
-            $code = $baseCode . '_' . $counter;
-            $counter++;
-        }
-        
-        // If still not unique after max attempts, add timestamp
-        if (RawMaterial::withTrashed()->where('code', $code)->exists()) {
-            $code = $baseCode . '_' . time();
+        // Format as RM001, RM002, etc. (3 digits with leading zeros)
+        $code = 'RM' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+
+        // Safety check: if code exists (shouldn't happen, but just in case), find next available
+        $maxAttempts = 10000;
+        $attempts = 0;
+        while (RawMaterial::withTrashed()->where('code', $code)->exists() && $attempts < $maxAttempts) {
+            $nextNumber++;
+            $code = 'RM' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+            $attempts++;
         }
 
         $user = auth()->user();
         
-        try {
-            $rawMaterial = RawMaterial::create([
-                'raw_material_name' => $request->raw_material_name,
-                'code' => $code,
-                'unit_of_measure' => $request->unit_of_measure,
-                'quantity_available' => $request->quantity_available,
-                'reorder_level' => $request->reorder_level,
-                'supplier_id' => $request->supplier_id,
-                'price_per_unit' => $request->price_per_unit,
-                'gst_percentage' => $request->gst_percentage ?? 0,
-                'description' => $request->description,
-                'is_active' => $request->has('is_active') ? true : false,
-                'organization_id' => $user->organization_id,
-                'branch_id' => $user->branch_id,
-                'created_by' => $user->id,
-            ]);
-        } catch (\Illuminate\Database\QueryException $e) {
-            // If still duplicate, generate with timestamp
-            if ($e->getCode() == 23000) {
-                $code = $baseCode . '_' . time() . '_' . rand(1000, 9999);
                 $rawMaterial = RawMaterial::create([
                     'raw_material_name' => $request->raw_material_name,
                     'code' => $code,
                     'unit_of_measure' => $request->unit_of_measure,
-                    'quantity_available' => $request->quantity_available,
                     'reorder_level' => $request->reorder_level,
-                    'supplier_id' => $request->supplier_id,
-                    'price_per_unit' => $request->price_per_unit,
-                    'gst_percentage' => $request->gst_percentage ?? 0,
-                    'description' => $request->description,
-                    'is_active' => $request->has('is_active') ? true : false,
                     'organization_id' => $user->organization_id,
                     'branch_id' => $user->branch_id,
                     'created_by' => $user->id,
                 ]);
-            } else {
-                throw $e;
-            }
-        }
 
         return redirect()->route('raw-materials.index')
             ->with('success', 'Raw Material created successfully.');
@@ -187,7 +145,6 @@ class RawMaterialController extends Controller
      */
     public function show(RawMaterial $rawMaterial): View
     {
-        $rawMaterial->load('supplier');
         return view('masters.raw-materials.show', compact('rawMaterial'));
     }
 
@@ -196,8 +153,7 @@ class RawMaterialController extends Controller
      */
     public function edit(RawMaterial $rawMaterial): View
     {
-        $suppliers = Supplier::where('is_active', true)->orderBy('supplier_name')->get();
-        return view('masters.raw-materials.edit', compact('rawMaterial', 'suppliers'));
+        return view('masters.raw-materials.edit', compact('rawMaterial'));
     }
 
     /**
@@ -208,42 +164,22 @@ class RawMaterialController extends Controller
         $request->validate([
             'raw_material_name' => 'required|string|max:255',
             'unit_of_measure' => 'required|string|max:50',
-            'quantity_available' => 'required|numeric|min:0',
             'reorder_level' => 'required|numeric|min:0',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'price_per_unit' => 'required|numeric|min:0',
-            'gst_percentage' => 'nullable|numeric|min:0|max:100',
-            'description' => 'nullable|string',
         ], [
             'raw_material_name.required' => 'Raw Material Name is required.',
             'raw_material_name.max' => 'Raw Material Name must not exceed 255 characters.',
             'unit_of_measure.required' => 'Unit of Measure is required.',
             'unit_of_measure.max' => 'Unit of Measure must not exceed 50 characters.',
-            'quantity_available.required' => 'Quantity Available is required.',
-            'quantity_available.numeric' => 'Quantity Available must be a number.',
-            'quantity_available.min' => 'Quantity Available must be at least 0.',
             'reorder_level.required' => 'Reorder Level is required.',
             'reorder_level.numeric' => 'Reorder Level must be a number.',
             'reorder_level.min' => 'Reorder Level must be at least 0.',
-            'supplier_id.exists' => 'Selected Supplier does not exist.',
-            'price_per_unit.required' => 'Price per Unit is required.',
-            'price_per_unit.numeric' => 'Price per Unit must be a number.',
-            'price_per_unit.min' => 'Price per Unit must be at least 0.',
-            'gst_percentage.numeric' => 'GST Percentage must be a number.',
-            'gst_percentage.min' => 'GST Percentage must be at least 0.',
-            'gst_percentage.max' => 'GST Percentage must not exceed 100.',
         ]);
 
+        // Raw Material ID (code) is not editable - it remains the same
         $rawMaterial->update([
             'raw_material_name' => $request->raw_material_name,
             'unit_of_measure' => $request->unit_of_measure,
-            'quantity_available' => $request->quantity_available,
             'reorder_level' => $request->reorder_level,
-            'supplier_id' => $request->supplier_id,
-            'price_per_unit' => $request->price_per_unit,
-            'gst_percentage' => $request->gst_percentage ?? 0,
-            'description' => $request->description,
-            'is_active' => $request->has('is_active') ? true : false,
         ]);
 
         return redirect()->route('raw-materials.index')

@@ -36,7 +36,7 @@ class NoteController extends Controller
 
     public function create()
     {
-        $customers = Customer::where('is_active', true)->orderBy('customer_name')->get();
+        $customers = Customer::orderBy('customer_name')->get();
         return view('crm.notes.create', compact('customers'));
     }
 
@@ -90,7 +90,7 @@ class NoteController extends Controller
 
     public function edit(Note $note)
     {
-        $customers = Customer::where('is_active', true)->orderBy('customer_name')->get();
+        $customers = Customer::orderBy('customer_name')->get();
         $note->load('attachments');
         return view('crm.notes.edit', compact('note', 'customers'));
     }

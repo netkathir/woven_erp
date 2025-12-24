@@ -33,6 +33,7 @@
                 <input type="text" name="employee_name" id="employee_name" value="{{ old('employee_name') }}" required
                     style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
                     placeholder="Enter employee name">
+                <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Employee ID will be auto-generated (EMP001, EMP002, etc.)</small>
                 @error('employee_name')
                     <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
                 @enderror
@@ -98,48 +99,13 @@
                 @enderror
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                <div>
-                    <label for="salary" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Salary</label>
-                    <input type="number" name="salary" id="salary" value="{{ old('salary') }}" step="0.01" min="0"
-                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
-                        placeholder="0.00">
-                    @error('salary')
-                        <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label for="joining_date" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Joining Date</label>
-                    <input type="date" name="joining_date" id="joining_date" value="{{ old('joining_date') }}"
-                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
-                    @error('joining_date')
-                        <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                    @enderror
-                </div>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label for="manager_id" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Manager</label>
-                <select name="manager_id" id="manager_id"
-                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; background: #fff;">
-                    <option value="">Select manager</option>
-                    @foreach($managers as $manager)
-                        <option value="{{ $manager->id }}" {{ old('manager_id') == $manager->id ? 'selected' : '' }}>
-                            {{ $manager->employee_name }} ({{ $manager->designation ?? 'N/A' }})
-                        </option>
-                    @endforeach
-                </select>
-                @error('manager_id')
+            <div>
+                <label for="joining_date" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Joining Date</label>
+                <input type="date" name="joining_date" id="joining_date" value="{{ old('joining_date') }}"
+                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+                @error('joining_date')
                     <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
                 @enderror
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
-                        style="width: 18px; height: 18px; cursor: pointer;">
-                    <span style="color: #333; font-weight: 500;">Active</span>
-                </label>
             </div>
         </div>
 

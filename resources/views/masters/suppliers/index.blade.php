@@ -36,7 +36,7 @@
     {{-- Search Form --}}
     <form method="GET" action="{{ route('suppliers.index') }}" style="margin-bottom: 20px;">
         <div style="display: flex; gap: 10px; align-items: center;">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name, code, contact, email, or phone..." 
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name, ID, contact, email, phone, or GST number..." 
                 style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
             <button type="submit" style="padding: 10px 20px; background: #17a2b8; color: white; border: none; border-radius: 5px; cursor: pointer;">
                 <i class="fas fa-search"></i> Search
@@ -55,13 +55,13 @@
                 <thead>
                     <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">S.No</th>
-                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Code</th>
+                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Supplier ID</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Supplier Name</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Contact Name</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Phone</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Email</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">City</th>
-                        <th style="padding: 12px; text-align: center; color: #333; font-weight: 600;">Status</th>
+                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">GST Number</th>
                         <th style="padding: 12px; text-align: center; color: #333; font-weight: 600;">Actions</th>
                     </tr>
                 </thead>
@@ -75,13 +75,7 @@
                             <td style="padding: 12px; color: #666;">{{ $supplier->phone_number ?? 'N/A' }}</td>
                             <td style="padding: 12px; color: #666;">{{ $supplier->email ?? 'N/A' }}</td>
                             <td style="padding: 12px; color: #666;">{{ $supplier->city ?? 'N/A' }}</td>
-                            <td style="padding: 12px; text-align: center;">
-                                @if($supplier->is_active)
-                                    <span style="padding: 4px 12px; background: #d4edda; color: #155724; border-radius: 12px; font-size: 12px;">Active</span>
-                                @else
-                                    <span style="padding: 4px 12px; background: #f8d7da; color: #721c24; border-radius: 12px; font-size: 12px;">Inactive</span>
-                                @endif
-                            </td>
+                            <td style="padding: 12px; color: #666;">{{ $supplier->gst_number ?? 'N/A' }}</td>
                             <td style="padding: 12px; text-align: center;">
                                 <div style="display: flex; gap: 8px; justify-content: center;">
                                     @if($canRead)

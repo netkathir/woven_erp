@@ -22,18 +22,12 @@ class Supplier extends Model
         'state',
         'postal_code',
         'country',
-        'payment_terms',
         'gst_number',
-        'bank_details',
-        'is_active',
         'organization_id',
         'branch_id',
         'created_by',
     ];
 
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
 
     /**
      * Get the organization that owns the supplier.

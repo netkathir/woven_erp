@@ -43,7 +43,8 @@ class SupplierController extends Controller
                   ->orWhere('code', 'like', "%{$search}%")
                   ->orWhere('contact_name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone_number', 'like', "%{$search}%");
+                  ->orWhere('phone_number', 'like', "%{$search}%")
+                  ->orWhere('gst_number', 'like', "%{$search}%");
             });
         }
         
@@ -101,9 +102,7 @@ class SupplierController extends Controller
             'state' => 'nullable|string|max:100',
             'postal_code' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
-            'payment_terms' => 'required|in:cash,credit,advance,partial,other',
             'gst_number' => 'nullable|string|max:50',
-            'bank_details' => 'nullable|string',
         ], [
             'supplier_name.required' => 'Supplier Name is required.',
             'supplier_name.max' => 'Supplier Name must not exceed 255 characters.',
@@ -117,85 +116,60 @@ class SupplierController extends Controller
             'state.max' => 'State must not exceed 100 characters.',
             'postal_code.max' => 'Postal Code must not exceed 20 characters.',
             'country.max' => 'Country must not exceed 100 characters.',
-            'payment_terms.required' => 'Payment Terms is required.',
-            'payment_terms.in' => 'Payment Terms must be one of: Cash, Credit, Advance, Partial, or Other.',
             'gst_number.max' => 'GST Number must not exceed 50 characters.',
         ]);
 
-        // Generate unique code
-        $baseCode = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $request->supplier_name), 0, 10));
-        
-        // Ensure base code is not empty
-        if (empty($baseCode)) {
-            $baseCode = 'SUP' . strtoupper(substr(md5($request->supplier_name), 0, 7));
+        // Generate sequential Supplier ID starting from SUP001
+        // Find the highest existing SUP### number
+        $allSuppliers = Supplier::withTrashed()
+            ->where('code', 'like', 'SUP%')
+            ->get();
+
+        $maxNumber = 0;
+        foreach ($allSuppliers as $supplier) {
+            // Extract number from code (e.g., SUP001 -> 1, SUP123 -> 123)
+            if (preg_match('/^SUP(\d+)$/i', $supplier->code, $matches)) {
+                $number = (int)$matches[1];
+                if ($number > $maxNumber) {
+                    $maxNumber = $number;
+                }
+            }
         }
-        
-        $code = $baseCode;
-        $counter = 1;
-        $maxAttempts = 1000; // Safety limit
-        
-        // Check for existing code including soft-deleted records
-        while (Supplier::withTrashed()->where('code', $code)->exists() && $counter < $maxAttempts) {
-            $code = $baseCode . '_' . $counter;
-            $counter++;
-        }
-        
-        // If still not unique after max attempts, add timestamp
-        if (Supplier::withTrashed()->where('code', $code)->exists()) {
-            $code = $baseCode . '_' . time();
+
+        // Next number is max + 1, starting from 1 if no suppliers exist
+        $nextNumber = $maxNumber + 1;
+
+        // Format as SUP001, SUP002, etc. (3 digits with leading zeros)
+        $code = 'SUP' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+
+        // Safety check: if code exists (shouldn't happen, but just in case), find next available
+        $maxAttempts = 10000;
+        $attempts = 0;
+        while (Supplier::withTrashed()->where('code', $code)->exists() && $attempts < $maxAttempts) {
+            $nextNumber++;
+            $code = 'SUP' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+            $attempts++;
         }
 
         $user = auth()->user();
         
-        try {
-            $supplier = Supplier::create([
-                'supplier_name' => $request->supplier_name,
-                'code' => $code,
-                'contact_name' => $request->contact_name,
-                'phone_number' => $request->phone_number,
-                'email' => $request->email,
-                'address_line_1' => $request->address_line_1,
-                'address_line_2' => $request->address_line_2,
-                'city' => $request->city,
-                'state' => $request->state,
-                'postal_code' => $request->postal_code,
-                'country' => $request->country,
-                'payment_terms' => $request->payment_terms,
-                'gst_number' => $request->gst_number,
-                'bank_details' => $request->bank_details,
-                'is_active' => $request->has('is_active') ? true : false,
-                'organization_id' => $user->organization_id,
-                'branch_id' => $user->branch_id,
-                'created_by' => $user->id,
-            ]);
-        } catch (\Illuminate\Database\QueryException $e) {
-            // If still duplicate, generate with timestamp
-            if ($e->getCode() == 23000) { // Integrity constraint violation
-                $code = $baseCode . '_' . time() . '_' . rand(1000, 9999);
-                $supplier = Supplier::create([
-                    'supplier_name' => $request->supplier_name,
-                    'code' => $code,
-                    'contact_name' => $request->contact_name,
-                    'phone_number' => $request->phone_number,
-                    'email' => $request->email,
-                    'address_line_1' => $request->address_line_1,
-                    'address_line_2' => $request->address_line_2,
-                    'city' => $request->city,
-                    'state' => $request->state,
-                    'postal_code' => $request->postal_code,
-                    'country' => $request->country,
-                    'payment_terms' => $request->payment_terms,
-                    'gst_number' => $request->gst_number,
-                    'bank_details' => $request->bank_details,
-                    'is_active' => $request->has('is_active') ? true : false,
-                    'organization_id' => $user->organization_id,
-                    'branch_id' => $user->branch_id,
-                    'created_by' => $user->id,
-                ]);
-            } else {
-                throw $e;
-            }
-        }
+        $supplier = Supplier::create([
+            'supplier_name' => $request->supplier_name,
+            'code' => $code,
+            'contact_name' => $request->contact_name,
+            'phone_number' => $request->phone_number,
+            'email' => $request->email,
+            'address_line_1' => $request->address_line_1,
+            'address_line_2' => $request->address_line_2,
+            'city' => $request->city,
+            'state' => $request->state,
+            'postal_code' => $request->postal_code,
+            'country' => $request->country,
+            'gst_number' => $request->gst_number,
+            'organization_id' => $user->organization_id,
+            'branch_id' => $user->branch_id,
+            'created_by' => $user->id,
+        ]);
 
         return redirect()->route('suppliers.index')
             ->with('success', 'Supplier created successfully.');
@@ -237,9 +211,7 @@ class SupplierController extends Controller
             'state' => 'nullable|string|max:100',
             'postal_code' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
-            'payment_terms' => 'required|in:cash,credit,advance,partial,other',
             'gst_number' => 'nullable|string|max:50',
-            'bank_details' => 'nullable|string',
         ], [
             'supplier_name.required' => 'Supplier Name is required.',
             'supplier_name.max' => 'Supplier Name must not exceed 255 characters.',
@@ -253,11 +225,10 @@ class SupplierController extends Controller
             'state.max' => 'State must not exceed 100 characters.',
             'postal_code.max' => 'Postal Code must not exceed 20 characters.',
             'country.max' => 'Country must not exceed 100 characters.',
-            'payment_terms.required' => 'Payment Terms is required.',
-            'payment_terms.in' => 'Payment Terms must be one of: Cash, Credit, Advance, Partial, or Other.',
             'gst_number.max' => 'GST Number must not exceed 50 characters.',
         ]);
 
+        // Supplier ID (code) is not editable - it remains the same
         $supplier->update([
             'supplier_name' => $request->supplier_name,
             'contact_name' => $request->contact_name,
@@ -269,10 +240,7 @@ class SupplierController extends Controller
             'state' => $request->state,
             'postal_code' => $request->postal_code,
             'country' => $request->country,
-            'payment_terms' => $request->payment_terms,
             'gst_number' => $request->gst_number,
-            'bank_details' => $request->bank_details,
-            'is_active' => $request->has('is_active') ? true : false,
         ]);
 
         return redirect()->route('suppliers.index')

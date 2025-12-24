@@ -34,9 +34,8 @@ class EmployeeController extends Controller
     public function create()
     {
         $departments = $this->getDepartments();
-        $managers = Employee::orderBy('employee_name')->get();
 
-        return view('masters.employees.create', compact('departments', 'managers'));
+        return view('masters.employees.create', compact('departments'));
     }
 
     public function store(Request $request)
@@ -50,49 +49,48 @@ class EmployeeController extends Controller
             'email',
             'address',
             'department',
-            'salary',
             'joining_date',
-            'manager_id',
         ]);
 
         $user = Auth::user();
         $data['organization_id'] = $user->organization_id ?? null;
         $data['branch_id'] = session('active_branch_id');
         $data['created_by'] = $user->id;
-        $data['is_active'] = $request->boolean('is_active', true);
 
-        // Generate unique employee code from name
-        $baseCode = strtoupper(preg_replace('/[^A-Z0-9]/', '', substr($data['employee_name'], 0, 20)));
-        if (empty($baseCode)) {
-            $baseCode = 'EMP' . strtoupper(substr(md5($data['employee_name'] . microtime()), 0, 6));
+        // Generate sequential Employee ID starting from EMP001
+        $allEmployees = Employee::withTrashed()
+            ->where('code', 'like', 'EMP%')
+            ->get();
+
+        $maxNumber = 0;
+        foreach ($allEmployees as $employee) {
+            // Extract number from code (e.g., EMP001 -> 1, EMP123 -> 123)
+            if (preg_match('/^EMP(\d+)$/i', $employee->code, $matches)) {
+                $number = (int)$matches[1];
+                if ($number > $maxNumber) {
+                    $maxNumber = $number;
+                }
+            }
         }
 
-        $code = $baseCode;
-        $suffix = 1;
-        $maxAttempts = 50;
+        // Next number is max + 1, starting from 1 if no employees exist
+        $nextNumber = $maxNumber + 1;
 
-        while (Employee::withTrashed()->where('code', $code)->exists() && $maxAttempts > 0) {
-            $code = $baseCode . $suffix;
-            $suffix++;
-            $maxAttempts--;
-        }
+        // Format as EMP001, EMP002, etc. (3 digits with leading zeros)
+        $code = 'EMP' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
-        if ($maxAttempts === 0 && Employee::withTrashed()->where('code', $code)->exists()) {
-            $code = $baseCode . '_' . time();
+        // Safety check: if code exists (shouldn't happen, but just in case), find next available
+        $maxAttempts = 10000;
+        $attempts = 0;
+        while (Employee::withTrashed()->where('code', $code)->exists() && $attempts < $maxAttempts) {
+            $nextNumber++;
+            $code = 'EMP' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+            $attempts++;
         }
 
         $data['code'] = $code;
 
-        try {
-            Employee::create($data);
-        } catch (QueryException $e) {
-            if ((int) $e->getCode() === 23000) {
-                $data['code'] = $baseCode . '_' . time() . '_' . random_int(100, 999);
                 Employee::create($data);
-            } else {
-                throw $e;
-            }
-        }
 
         return redirect()
             ->route('employees.index')
@@ -107,17 +105,15 @@ class EmployeeController extends Controller
     public function edit(Employee $employee)
     {
         $departments = $this->getDepartments();
-        $managers = Employee::where('id', '!=', $employee->id)
-            ->orderBy('employee_name')
-            ->get();
 
-        return view('masters.employees.edit', compact('employee', 'departments', 'managers'));
+        return view('masters.employees.edit', compact('employee', 'departments'));
     }
 
     public function update(Request $request, Employee $employee)
     {
         $this->validateRequest($request, $employee->id);
 
+        // Employee ID (code) is not editable - it remains the same
         $data = $request->only([
             'employee_name',
             'designation',
@@ -125,12 +121,8 @@ class EmployeeController extends Controller
             'email',
             'address',
             'department',
-            'salary',
             'joining_date',
-            'manager_id',
         ]);
-
-        $data['is_active'] = $request->boolean('is_active', true);
 
         $employee->update($data);
 
@@ -169,9 +161,7 @@ class EmployeeController extends Controller
                 'email' => $emailRule,
                 'address' => ['nullable', 'string', 'max:500'],
                 'department' => ['nullable', 'in:sales,hr,operations,accounts,production,it,other'],
-                'salary' => ['nullable', 'numeric', 'min:0'],
                 'joining_date' => ['nullable', 'date'],
-                'manager_id' => ['nullable', 'exists:employees,id'],
             ],
             [
                 'employee_name.required' => 'The Employee Name field is required.',
@@ -182,10 +172,7 @@ class EmployeeController extends Controller
                 'email.unique' => 'The Email has already been taken.',
                 'address.max' => 'The Address may not be greater than 500 characters.',
                 'department.in' => 'The Department must be one of the allowed options.',
-                'salary.numeric' => 'The Salary must be a number.',
-                'salary.min' => 'The Salary must be at least 0.',
                 'joining_date.date' => 'The Joining Date must be a valid date.',
-                'manager_id.exists' => 'The selected Manager is invalid.',
             ]
         );
     }

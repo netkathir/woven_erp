@@ -39,7 +39,8 @@ class CustomerController extends Controller
                   ->orWhere('code', 'like', "%{$search}%")
                   ->orWhere('contact_name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone_number', 'like', "%{$search}%");
+                  ->orWhere('phone_number', 'like', "%{$search}%")
+                  ->orWhere('gst_number', 'like', "%{$search}%");
             });
         }
         
@@ -98,13 +99,10 @@ class CustomerController extends Controller
             'shipping_state' => 'nullable|string|max:100',
             'shipping_postal_code' => 'nullable|string|max:20',
             'shipping_country' => 'nullable|string|max:100',
-            'payment_terms' => 'required|in:cash,credit,advance,partial,other',
             'gst_number' => 'nullable|string|max:50',
-            'credit_limit' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
         ], [
-            'customer_name.required' => 'Customer Name is required.',
-            'customer_name.max' => 'Customer Name must not exceed 255 characters.',
+            'customer_name.required' => 'Customer/Company Name is required.',
+            'customer_name.max' => 'Customer/Company Name must not exceed 255 characters.',
             'contact_name.max' => 'Contact Name must not exceed 255 characters.',
             'phone_number.max' => 'Phone Number must not exceed 20 characters.',
             'email.email' => 'Email must be a valid email address.',
@@ -121,101 +119,65 @@ class CustomerController extends Controller
             'shipping_state.max' => 'Shipping State must not exceed 100 characters.',
             'shipping_postal_code.max' => 'Shipping Postal Code must not exceed 20 characters.',
             'shipping_country.max' => 'Shipping Country must not exceed 100 characters.',
-            'payment_terms.required' => 'Payment Terms is required.',
-            'payment_terms.in' => 'Payment Terms must be one of: Cash, Credit, Advance, Partial, or Other.',
             'gst_number.max' => 'GST Number must not exceed 50 characters.',
-            'credit_limit.numeric' => 'Credit Limit must be a number.',
-            'credit_limit.min' => 'Credit Limit must be at least 0.',
         ]);
 
-        // Generate unique code
-        $baseCode = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $request->customer_name), 0, 10));
-        
-        // Ensure base code is not empty
-        if (empty($baseCode)) {
-            $baseCode = 'CUST' . strtoupper(substr(md5($request->customer_name), 0, 7));
+        // Generate sequential Customer ID starting from CUS001
+        $allCustomers = Customer::withTrashed()
+            ->where('code', 'like', 'CUS%')
+            ->get();
+
+        $maxNumber = 0;
+        foreach ($allCustomers as $customer) {
+            // Extract number from code (e.g., CUS001 -> 1, CUS123 -> 123)
+            if (preg_match('/^CUS(\d+)$/i', $customer->code, $matches)) {
+                $number = (int)$matches[1];
+                if ($number > $maxNumber) {
+                    $maxNumber = $number;
+                }
+            }
         }
-        
-        $code = $baseCode;
-        $counter = 1;
-        $maxAttempts = 1000;
-        
-        // Check for existing code including soft-deleted records
-        while (Customer::withTrashed()->where('code', $code)->exists() && $counter < $maxAttempts) {
-            $code = $baseCode . '_' . $counter;
-            $counter++;
-        }
-        
-        // If still not unique after max attempts, add timestamp
-        if (Customer::withTrashed()->where('code', $code)->exists()) {
-            $code = $baseCode . '_' . time();
+
+        // Next number is max + 1, starting from 1 if no customers exist
+        $nextNumber = $maxNumber + 1;
+
+        // Format as CUS001, CUS002, etc. (3 digits with leading zeros)
+        $code = 'CUS' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+
+        // Safety check: if code exists (shouldn't happen, but just in case), find next available
+        $maxAttempts = 10000;
+        $attempts = 0;
+        while (Customer::withTrashed()->where('code', $code)->exists() && $attempts < $maxAttempts) {
+            $nextNumber++;
+            $code = 'CUS' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+            $attempts++;
         }
 
         $user = auth()->user();
         
-        try {
-            $customer = Customer::create([
-                'customer_name' => $request->customer_name,
-                'code' => $code,
-                'contact_name' => $request->contact_name,
-                'phone_number' => $request->phone_number,
-                'email' => $request->email,
-                'billing_address_line_1' => $request->billing_address_line_1,
-                'billing_address_line_2' => $request->billing_address_line_2,
-                'billing_city' => $request->billing_city,
-                'billing_state' => $request->billing_state,
-                'billing_postal_code' => $request->billing_postal_code,
-                'billing_country' => $request->billing_country,
-                'shipping_address_line_1' => $request->shipping_address_line_1,
-                'shipping_address_line_2' => $request->shipping_address_line_2,
-                'shipping_city' => $request->shipping_city,
-                'shipping_state' => $request->shipping_state,
-                'shipping_postal_code' => $request->shipping_postal_code,
-                'shipping_country' => $request->shipping_country,
-                'payment_terms' => $request->payment_terms,
-                'gst_number' => $request->gst_number,
-                'credit_limit' => $request->credit_limit ?? 0,
-                'notes' => $request->notes,
-                'is_active' => $request->has('is_active') ? true : false,
-                'organization_id' => $user->organization_id,
-                'branch_id' => $user->branch_id,
-                'created_by' => $user->id,
-            ]);
-        } catch (\Illuminate\Database\QueryException $e) {
-            // If still duplicate, generate with timestamp
-            if ($e->getCode() == 23000) {
-                $code = $baseCode . '_' . time() . '_' . rand(1000, 9999);
-                $customer = Customer::create([
-                    'customer_name' => $request->customer_name,
-                    'code' => $code,
-                    'contact_name' => $request->contact_name,
-                    'phone_number' => $request->phone_number,
-                    'email' => $request->email,
-                    'billing_address_line_1' => $request->billing_address_line_1,
-                    'billing_address_line_2' => $request->billing_address_line_2,
-                    'billing_city' => $request->billing_city,
-                    'billing_state' => $request->billing_state,
-                    'billing_postal_code' => $request->billing_postal_code,
-                    'billing_country' => $request->billing_country,
-                    'shipping_address_line_1' => $request->shipping_address_line_1,
-                    'shipping_address_line_2' => $request->shipping_address_line_2,
-                    'shipping_city' => $request->shipping_city,
-                    'shipping_state' => $request->shipping_state,
-                    'shipping_postal_code' => $request->shipping_postal_code,
-                    'shipping_country' => $request->shipping_country,
-                    'payment_terms' => $request->payment_terms,
-                    'gst_number' => $request->gst_number,
-                    'credit_limit' => $request->credit_limit ?? 0,
-                    'notes' => $request->notes,
-                    'is_active' => $request->has('is_active') ? true : false,
-                    'organization_id' => $user->organization_id,
-                    'branch_id' => $user->branch_id,
-                    'created_by' => $user->id,
-                ]);
-            } else {
-                throw $e;
-            }
-        }
+        $customer = Customer::create([
+            'customer_name' => $request->customer_name,
+            'code' => $code,
+            'contact_name' => $request->contact_name,
+            'phone_number' => $request->phone_number,
+            'email' => $request->email,
+            'billing_address_line_1' => $request->billing_address_line_1,
+            'billing_address_line_2' => $request->billing_address_line_2,
+            'billing_city' => $request->billing_city,
+            'billing_state' => $request->billing_state,
+            'billing_postal_code' => $request->billing_postal_code,
+            'billing_country' => $request->billing_country,
+            'shipping_address_line_1' => $request->shipping_address_line_1,
+            'shipping_address_line_2' => $request->shipping_address_line_2,
+            'shipping_city' => $request->shipping_city,
+            'shipping_state' => $request->shipping_state,
+            'shipping_postal_code' => $request->shipping_postal_code,
+            'shipping_country' => $request->shipping_country,
+            'gst_number' => $request->gst_number,
+            'organization_id' => $user->organization_id,
+            'branch_id' => $user->branch_id,
+            'created_by' => $user->id,
+        ]);
 
         return redirect()->route('customers.index')
             ->with('success', 'Customer created successfully.');
@@ -259,13 +221,10 @@ class CustomerController extends Controller
             'shipping_state' => 'nullable|string|max:100',
             'shipping_postal_code' => 'nullable|string|max:20',
             'shipping_country' => 'nullable|string|max:100',
-            'payment_terms' => 'required|in:cash,credit,advance,partial,other',
             'gst_number' => 'nullable|string|max:50',
-            'credit_limit' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
         ], [
-            'customer_name.required' => 'Customer Name is required.',
-            'customer_name.max' => 'Customer Name must not exceed 255 characters.',
+            'customer_name.required' => 'Customer/Company Name is required.',
+            'customer_name.max' => 'Customer/Company Name must not exceed 255 characters.',
             'contact_name.max' => 'Contact Name must not exceed 255 characters.',
             'phone_number.max' => 'Phone Number must not exceed 20 characters.',
             'email.email' => 'Email must be a valid email address.',
@@ -282,13 +241,10 @@ class CustomerController extends Controller
             'shipping_state.max' => 'Shipping State must not exceed 100 characters.',
             'shipping_postal_code.max' => 'Shipping Postal Code must not exceed 20 characters.',
             'shipping_country.max' => 'Shipping Country must not exceed 100 characters.',
-            'payment_terms.required' => 'Payment Terms is required.',
-            'payment_terms.in' => 'Payment Terms must be one of: Cash, Credit, Advance, Partial, or Other.',
             'gst_number.max' => 'GST Number must not exceed 50 characters.',
-            'credit_limit.numeric' => 'Credit Limit must be a number.',
-            'credit_limit.min' => 'Credit Limit must be at least 0.',
         ]);
 
+        // Customer ID (code) is not editable - it remains the same
         $customer->update([
             'customer_name' => $request->customer_name,
             'contact_name' => $request->contact_name,
@@ -306,11 +262,7 @@ class CustomerController extends Controller
             'shipping_state' => $request->shipping_state,
             'shipping_postal_code' => $request->shipping_postal_code,
             'shipping_country' => $request->shipping_country,
-            'payment_terms' => $request->payment_terms,
             'gst_number' => $request->gst_number,
-            'credit_limit' => $request->credit_limit ?? 0,
-            'notes' => $request->notes,
-            'is_active' => $request->has('is_active') ? true : false,
         ]);
 
         return redirect()->route('customers.index')

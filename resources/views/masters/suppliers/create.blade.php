@@ -33,6 +33,7 @@
                 <input type="text" name="supplier_name" id="supplier_name" value="{{ old('supplier_name') }}" required
                     style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
                     placeholder="Enter supplier name">
+                <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Supplier ID will be auto-generated (SUP001, SUP002, etc.)</small>
                 @error('supplier_name')
                     <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
                 @enderror
@@ -140,9 +141,22 @@
 
             <div>
                 <label for="country" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Country</label>
-                <input type="text" name="country" id="country" value="{{ old('country', 'India') }}"
-                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
-                    placeholder="Enter country">
+                <select name="country" id="country"
+                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; background: #fff;">
+                    <option value="">Select country</option>
+                    @php
+                        $countries = [
+                            'India', 'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
+                            'Japan', 'China', 'Brazil', 'Russia', 'South Korea', 'Italy', 'Spain', 'Mexico',
+                            'Indonesia', 'Netherlands', 'Saudi Arabia', 'Turkey', 'Switzerland', 'Singapore',
+                            'Malaysia', 'Thailand', 'Philippines', 'Vietnam', 'Bangladesh', 'Pakistan', 'Sri Lanka',
+                            'Nepal', 'Myanmar', 'Other'
+                        ];
+                    @endphp
+                    @foreach($countries as $country)
+                        <option value="{{ $country }}" {{ old('country', 'India') === $country ? 'selected' : '' }}>{{ $country }}</option>
+                    @endforeach
+                </select>
                 @error('country')
                     <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
                 @enderror
@@ -153,22 +167,6 @@
             <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Business Information</h3>
             
             <div style="margin-bottom: 20px;">
-                <label for="payment_terms" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Payment Terms <span style="color: red;">*</span></label>
-                <select name="payment_terms" id="payment_terms" required
-                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; background: #fff;">
-                    <option value="">Select payment terms</option>
-                    <option value="cash" {{ old('payment_terms') === 'cash' ? 'selected' : '' }}>Cash</option>
-                    <option value="credit" {{ old('payment_terms') === 'credit' || old('payment_terms') === '' ? 'selected' : '' }}>Credit</option>
-                    <option value="advance" {{ old('payment_terms') === 'advance' ? 'selected' : '' }}>Advance</option>
-                    <option value="partial" {{ old('payment_terms') === 'partial' ? 'selected' : '' }}>Partial</option>
-                    <option value="other" {{ old('payment_terms') === 'other' ? 'selected' : '' }}>Other</option>
-                </select>
-                @error('payment_terms')
-                    <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div style="margin-bottom: 20px;">
                 <label for="gst_number" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">GST Number</label>
                 <input type="text" name="gst_number" id="gst_number" value="{{ old('gst_number') }}"
                     style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
@@ -176,24 +174,6 @@
                 @error('gst_number')
                     <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
                 @enderror
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label for="bank_details" style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Bank Details</label>
-                <textarea name="bank_details" id="bank_details" rows="3"
-                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; resize: vertical;"
-                    placeholder="Enter bank account details (account number, IFSC, bank name, etc.)">{{ old('bank_details') }}</textarea>
-                @error('bank_details')
-                    <p style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
-                        style="width: 18px; height: 18px; cursor: pointer;">
-                    <span style="color: #333; font-weight: 500;">Active</span>
-                </label>
             </div>
         </div>
 

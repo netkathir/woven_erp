@@ -33,8 +33,8 @@ class MaterialInwardController extends Controller
 
     public function create()
     {
-        $suppliers = Supplier::where('is_active', true)->orderBy('supplier_name')->get();
-        $rawMaterials = RawMaterial::where('is_active', true)->orderBy('raw_material_name')->get();
+        $suppliers = Supplier::orderBy('supplier_name')->get();
+        $rawMaterials = RawMaterial::orderBy('raw_material_name')->get();
 
         return view('transactions.material-inwards.create', compact('suppliers', 'rawMaterials'));
     }
@@ -92,8 +92,8 @@ class MaterialInwardController extends Controller
 
     public function edit(MaterialInward $materialInward)
     {
-        $suppliers = Supplier::where('is_active', true)->orderBy('supplier_name')->get();
-        $rawMaterials = RawMaterial::where('is_active', true)->orderBy('raw_material_name')->get();
+        $suppliers = Supplier::orderBy('supplier_name')->get();
+        $rawMaterials = RawMaterial::orderBy('raw_material_name')->get();
 
         $materialInward->load('items');
 
