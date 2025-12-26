@@ -707,6 +707,18 @@
                     <span>Sales Invoices</span>
                 </a>
                 @endif
+                @if($user->canAccessPage('debit-notes.index'))
+                <a href="{{ route('debit-notes.index') }}" class="menu-item" title="Debit Notes">
+                    <i class="fas fa-file-invoice"></i>
+                    <span>Debit Notes</span>
+                </a>
+                @endif
+                @if($user->canAccessPage('quotations.index'))
+                <a href="{{ route('quotations.index') }}" class="menu-item" title="Quotations">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Quotations</span>
+                </a>
+                @endif
                 @if($user->canAccessPage('payment-trackings.index'))
                 <a href="{{ route('payment-trackings.index') }}" class="menu-item" title="Payment Tracking">
                     <i class="fas fa-money-check-alt"></i>

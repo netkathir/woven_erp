@@ -145,6 +145,17 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('sales-invoices', App\Http\Controllers\SalesInvoiceController::class);
     Route::get('sales-invoices/{sales_invoice}/print', [App\Http\Controllers\SalesInvoiceController::class, 'print'])->name('sales-invoices.print');
     
+    // Debit Notes
+    Route::resource('debit-notes', App\Http\Controllers\DebitNoteController::class);
+    Route::post('debit-notes/{debit_note}/submit', [App\Http\Controllers\DebitNoteController::class, 'submit'])->name('debit-notes.submit');
+    Route::post('debit-notes/{debit_note}/cancel', [App\Http\Controllers\DebitNoteController::class, 'cancel'])->name('debit-notes.cancel');
+    Route::get('debit-notes/reference-documents', [App\Http\Controllers\DebitNoteController::class, 'getReferenceDocuments'])->name('debit-notes.reference-documents');
+    Route::get('debit-notes/reference-document-details', [App\Http\Controllers\DebitNoteController::class, 'getReferenceDocumentDetails'])->name('debit-notes.reference-document-details');
+    
+    // Quotations
+    Route::resource('quotations', App\Http\Controllers\QuotationController::class);
+    Route::get('quotations/{quotation}/print', [App\Http\Controllers\QuotationController::class, 'print'])->name('quotations.print');
+    
     // Payment Tracking
     Route::get('payment-trackings/get-invoices', [App\Http\Controllers\PaymentTrackingController::class, 'getInvoices'])->name('payment-trackings.get-invoices');
     Route::get('payment-trackings/get-transaction-history/{invoiceId}', [App\Http\Controllers\PaymentTrackingController::class, 'getTransactionHistory'])->name('payment-trackings.get-transaction-history');
