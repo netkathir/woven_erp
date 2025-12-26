@@ -713,6 +713,12 @@
                     <span>Debit Notes</span>
                 </a>
                 @endif
+                @if($user->canAccessPage('credit-notes.index'))
+                <a href="{{ route('credit-notes.index') }}" class="menu-item" title="Credit Notes">
+                    <i class="fas fa-file-invoice"></i>
+                    <span>Credit Notes</span>
+                </a>
+                @endif
                 @if($user->canAccessPage('quotations.index'))
                 <a href="{{ route('quotations.index') }}" class="menu-item" title="Quotations">
                     <i class="fas fa-file-contract"></i>
