@@ -71,7 +71,7 @@ class PettyCashController extends Controller
         $pettyCash->save();
 
         return redirect()->route('petty-cash.index')
-            ->with('success', 'Petty Cash entry created successfully.');
+            ->with('success', 'Daily Expense entry created successfully.');
     }
 
     public function show(PettyCash $pettyCash)
@@ -112,8 +112,54 @@ class PettyCashController extends Controller
 
         $pettyCash->save();
 
-        return redirect()->route('petty-cash.index')
-            ->with('success', 'Petty Cash entry updated successfully.');
+        // Refresh the model to get updated data
+        $pettyCash->refresh();
+
+        return redirect()->route('petty-cash.edit', $pettyCash->id)
+            ->with('success', 'Daily Expense entry updated successfully.');
+    }
+
+    public function deleteReceipt(PettyCash $pettyCash)
+    {
+        try {
+            // Delete receipt file if exists
+            if ($pettyCash->receipt_path && Storage::disk('public')->exists($pettyCash->receipt_path)) {
+                Storage::disk('public')->delete($pettyCash->receipt_path);
+            }
+            
+            // Clear receipt_path from database
+            $pettyCash->receipt_path = null;
+            $pettyCash->save();
+            
+            return response()->json(['success' => true, 'message' => 'Receipt deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error deleting receipt: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function showReceipt(PettyCash $pettyCash)
+    {
+        if (!$pettyCash->receipt_path) {
+            abort(404, 'Receipt not found');
+        }
+
+        if (!Storage::disk('public')->exists($pettyCash->receipt_path)) {
+            abort(404, 'Receipt file not found');
+        }
+
+        $filePath = Storage::disk('public')->path($pettyCash->receipt_path);
+        $mimeType = Storage::disk('public')->mimeType($pettyCash->receipt_path);
+        $lastModified = Storage::disk('public')->lastModified($pettyCash->receipt_path);
+
+        return response()->file($filePath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . basename($pettyCash->receipt_path) . '"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+            'Last-Modified' => gmdate('D, d M Y H:i:s', $lastModified) . ' GMT',
+            'ETag' => md5($pettyCash->receipt_path . $lastModified),
+        ]);
     }
 
     public function destroy(PettyCash $pettyCash)
@@ -126,7 +172,7 @@ class PettyCashController extends Controller
         $pettyCash->delete();
 
         return redirect()->route('petty-cash.index')
-            ->with('success', 'Petty Cash entry deleted successfully.');
+            ->with('success', 'Daily Expense entry deleted successfully.');
     }
 
     protected function validateRequest(Request $request, ?PettyCash $pettyCash = null): array
@@ -143,9 +189,9 @@ class PettyCashController extends Controller
         ];
 
         if (!$pettyCash) {
-            $rules['expense_id'] = ['nullable', 'string', 'max:191', 'unique:petty_cashes,expense_id'];
+            $rules['expense_id'] = ['nullable', 'string', 'max:191', 'unique:daily_expenses,expense_id'];
         } else {
-            $rules['expense_id'] = ['nullable', 'string', 'max:191', 'unique:petty_cashes,expense_id,' . $pettyCash->id];
+            $rules['expense_id'] = ['nullable', 'string', 'max:191', 'unique:daily_expenses,expense_id,' . $pettyCash->id];
         }
 
         return $request->validate($rules);

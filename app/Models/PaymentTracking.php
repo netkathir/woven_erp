@@ -6,39 +6,35 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class DailyExpense extends Model
+class PaymentTracking extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'expense_id',
-        'expense_date',
-        'expense_category',
-        'vendor_name',
+        'customer_id',
+        'sales_invoice_id',
+        'payment_date',
+        'payment_amount',
         'payment_method',
-        'invoice_number',
-        'amount',
-        'gst_applied',
-        'total_expense_amount',
-        'total_gst_amount',
-        'grand_total',
+        'remarks',
         'organization_id',
         'branch_id',
         'created_by',
     ];
 
     protected $casts = [
-        'expense_date' => 'date',
-        'amount' => 'decimal:2',
-        'gst_applied' => 'decimal:2',
-        'total_expense_amount' => 'decimal:2',
-        'total_gst_amount' => 'decimal:2',
-        'grand_total' => 'decimal:2',
+        'payment_date' => 'date',
+        'payment_amount' => 'decimal:2',
     ];
 
-    public function items()
+    public function customer()
     {
-        return $this->hasMany(DailyExpenseItem::class);
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function salesInvoice()
+    {
+        return $this->belongsTo(SalesInvoice::class);
     }
 
     public function organization()
@@ -56,4 +52,3 @@ class DailyExpense extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 }
-

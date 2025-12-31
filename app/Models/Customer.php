@@ -13,9 +13,15 @@ class Customer extends Model
     protected $fillable = [
         'customer_name',
         'code',
-        'contact_name',
+        'contact_name_1',
+        'contact_name_2',
         'phone_number',
         'email',
+        'gst_number',
+        'bank_name',
+        'ifsc_code',
+        'account_number',
+        'bank_branch_name',
         'billing_address_line_1',
         'billing_address_line_2',
         'billing_city',
@@ -28,7 +34,6 @@ class Customer extends Model
         'shipping_state',
         'shipping_postal_code',
         'shipping_country',
-        'gst_number',
         'organization_id',
         'branch_id',
         'created_by',
@@ -59,50 +64,11 @@ class Customer extends Model
     }
 
     /**
-     * Get the full billing address as a formatted string.
+     * Get the sales invoices for the customer.
      */
-    public function getBillingAddressAttribute()
+    public function salesInvoices()
     {
-        $address = $this->billing_address_line_1 ?? '';
-        if ($this->billing_address_line_2) {
-            $address .= ', ' . $this->billing_address_line_2;
-        }
-        if ($this->billing_city) {
-            $address .= ', ' . $this->billing_city;
-        }
-        if ($this->billing_state) {
-            $address .= ', ' . $this->billing_state;
-        }
-        if ($this->billing_postal_code) {
-            $address .= ' - ' . $this->billing_postal_code;
-        }
-        if ($this->billing_country) {
-            $address .= ', ' . $this->billing_country;
-        }
-        return $address;
+        return $this->hasMany(SalesInvoice::class);
     }
 
-    /**
-     * Get the full shipping address as a formatted string.
-     */
-    public function getShippingAddressAttribute()
-    {
-        $address = $this->shipping_address_line_1 ?? '';
-        if ($this->shipping_address_line_2) {
-            $address .= ', ' . $this->shipping_address_line_2;
-        }
-        if ($this->shipping_city) {
-            $address .= ', ' . $this->shipping_city;
-        }
-        if ($this->shipping_state) {
-            $address .= ', ' . $this->shipping_state;
-        }
-        if ($this->shipping_postal_code) {
-            $address .= ' - ' . $this->shipping_postal_code;
-        }
-        if ($this->shipping_country) {
-            $address .= ', ' . $this->shipping_country;
-        }
-        return $address;
-    }
 }

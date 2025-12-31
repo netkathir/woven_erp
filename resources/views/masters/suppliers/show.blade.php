@@ -20,10 +20,6 @@
         <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Basic Information</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div>
-                <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Supplier ID</label>
-                <p style="color: #333; font-size: 16px; margin: 0 0 20px 0; font-weight: 500;">{{ $supplier->code }}</p>
-            </div>
-            <div>
                 <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Supplier Name</label>
                 <p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">{{ $supplier->supplier_name }}</p>
             </div>
@@ -66,6 +62,28 @@
                     N/A
                 @endif
             </p>
+        </div>
+    </div>
+
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+        <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Bank Information</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Bank Name</label>
+                <p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">{{ $supplier->bank_name ?? 'N/A' }}</p>
+            </div>
+            <div>
+                <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">IFSC Code</label>
+                <p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">{{ $supplier->ifsc_code ?? 'N/A' }}</p>
+            </div>
+            <div>
+                <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Account Number</label>
+                <p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">{{ $supplier->account_number ?? 'N/A' }}</p>
+            </div>
+            <div>
+                <label style="display: block; color: #666; font-weight: 500; margin-bottom: 5px;">Branch Name</label>
+                <p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">{{ $supplier->branch_name ?? 'N/A' }}</p>
+            </div>
         </div>
     </div>
 

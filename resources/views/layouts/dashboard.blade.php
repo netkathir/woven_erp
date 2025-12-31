@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'Dashboard - Woven_ERP')</title>
+    <title>@yield('title', 'Dashboard - ' . ($companyName ?? 'Woven_ERP'))</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -336,6 +336,17 @@
             top: 0;
             z-index: 100;
         }
+        .top-header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .top-header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-left: auto;
+        }
         .mobile-menu-toggle {
             display: none;
             background: none;
@@ -475,6 +486,21 @@
         }
     </style>
     @stack('styles')
+    
+    <!-- Global Styles for Number Input Fields -->
+    <style>
+        /* Hide spinner arrows in number input fields across all forms */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        /* Firefox */
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -484,7 +510,7 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="logo">Woven_ERP</div>
+                <div class="logo">{{ $companyName ?? 'Woven_ERP' }}</div>
                 <button class="menu-toggle" id="sidebarToggleBtn" onclick="handleSidebarToggle()" title="Toggle Sidebar">
                     <i class="fas fa-bars" id="sidebarToggleIcon"></i>
                 </button>
@@ -619,27 +645,27 @@
                 </div>
                 @endif
 
-                {{-- Petty Cash Master Menu --}}
+                {{-- Daily Expense Master Menu --}}
                 @php
                     $hasPettyCashMasterAccess = $user->canAccessPage('petty-cash.index');
                 @endphp
                 @if($hasPettyCashMasterAccess)
-                <div class="menu-item-header" onclick="togglePettyCashMasterMenu()" id="pettyCashMasterHeader" style="margin-top: 10px;" title="Petty Cash Master">
+                <div class="menu-item-header" onclick="togglePettyCashMasterMenu()" id="pettyCashMasterHeader" style="margin-top: 10px;" title="Daily Expense Master">
                     <i class="fas fa-wallet menu-header-icon"></i>
-                    <span>Petty Cash Master</span>
+                    <span>Daily Expense Master</span>
                     <i class="fas fa-chevron-down arrow"></i>
                 </div>
                 <div class="menu-sub-items" id="pettyCashMasterMenu">
                         @if($user->canAccessPage('petty-cash.index'))
-                    <a href="{{ route('petty-cash.index') }}" class="menu-item" title="Petty Cash Form">
+                    <a href="{{ route('petty-cash.index') }}" class="menu-item" title="Daily Expense Form">
                         <i class="fas fa-file-alt"></i>
-                        <span>Petty Cash Form</span>
+                        <span>Daily Expense Form</span>
                     </a>
                         @endif
                         @if($user->canAccessPage('petty-cash.index'))
-                    <a href="{{ route('petty-cash.report') }}" class="menu-item" title="Petty Cash Report">
+                    <a href="{{ route('petty-cash.report') }}" class="menu-item" title="Daily Expense Report">
                         <i class="fas fa-chart-line"></i>
-                        <span>Petty Cash Report</span>
+                        <span>Daily Expense Report</span>
                     </a>
                         @endif
                 </div>
@@ -696,20 +722,44 @@
                     <span>Sales Invoices</span>
                 </a>
                 @endif
-                @if($user->canAccessPage('daily-expenses.index'))
-                <a href="{{ route('daily-expenses.index') }}" class="menu-item" title="Daily Expenses">
-                    <i class="fas fa-money-bill-wave"></i>
-                    <span>Daily Expenses</span>
+                @if($user->canAccessPage('debit-notes.index'))
+                <a href="{{ route('debit-notes.index') }}" class="menu-item" title="Debit Notes">
+                    <i class="fas fa-file-invoice"></i>
+                    <span>Debit Notes</span>
                 </a>
                 @endif
-                {{-- Stock Menu --}}
+                @if($user->canAccessPage('credit-notes.index'))
+                <a href="{{ route('credit-notes.index') }}" class="menu-item" title="Credit Notes">
+                    <i class="fas fa-file-invoice"></i>
+                    <span>Credit Notes</span>
+                </a>
+                @endif
+                @if($user->canAccessPage('quotations.index'))
+                <a href="{{ route('quotations.index') }}" class="menu-item" title="Quotations">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Quotations</span>
+                </a>
+                @endif
+                @if($user->canAccessPage('payment-trackings.index'))
+                <a href="{{ route('payment-trackings.index') }}" class="menu-item" title="Payment Tracking">
+                    <i class="fas fa-money-check-alt"></i>
+                    <span>Payment Tracking</span>
+                </a>
+                @endif
+                @if($user->canAccessPage('salary-masters.salary-setup.index'))
+                <a href="{{ route('salary-masters.index') }}" class="menu-item" title="Salary Master">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Salary Master</span>
+                </a>
+                @endif
+                {{-- Store Menu --}}
                 @php
                     $hasStockAccess = $user->canAccessPage('stock-transactions.index');
                 @endphp
                 @if($hasStockAccess)
-                <div class="menu-item-header" onclick="toggleStockMenu()" id="stockHeader" style="margin-top: 10px;" title="Stock">
+                <div class="menu-item-header" onclick="toggleStockMenu()" id="stockHeader" style="margin-top: 10px;" title="Store">
                     <i class="fas fa-boxes menu-header-icon"></i>
-                    <span>Stock</span>
+                    <span>Store</span>
                     <i class="fas fa-chevron-down arrow"></i>
                 </div>
                 <div class="menu-sub-items" id="stockMenu">
@@ -814,11 +864,12 @@
         <div class="main-content" id="mainContent">
             <!-- Top Header -->
             <header class="top-header">
+                <div class="top-header-left">
                 <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()" aria-label="Toggle menu">
                     <i class="fas fa-bars"></i>
                 </button>
-                <div class="user-info" style="display: flex; align-items: center; gap: 15px;">
-                    
+                </div>
+                <div class="top-header-right">
                     @if(auth()->user()->role)
                         <span class="role-badge">{{ auth()->user()->role->name }}</span>
                     @endif
@@ -1057,7 +1108,7 @@
             }
         }
 
-        // Toggle Petty Cash Master menu
+        // Toggle Daily Expense Master menu
         function togglePettyCashMasterMenu() {
             const pettyCashMasterMenu = document.getElementById('pettyCashMasterMenu');
             const pettyCashMasterHeader = document.getElementById('pettyCashMasterHeader');
@@ -1085,7 +1136,7 @@
             }
         }
 
-        // Toggle Stock menu
+        // Toggle Store menu
         function toggleStockMenu() {
             const stockMenu = document.getElementById('stockMenu');
             const stockHeader = document.getElementById('stockHeader');
@@ -1163,7 +1214,7 @@
                 }
             }
 
-            // Petty Cash Master menu
+            // Daily Expense Master menu
             const pettyCashMasterSavedState = localStorage.getItem('pettyCashMasterMenuCollapsed');
             if (pettyCashMasterSavedState === 'true') {
                 const pettyCashMasterMenu = document.getElementById('pettyCashMasterMenu');
@@ -1185,7 +1236,7 @@
                 }
             }
 
-            // Stock menu
+            // Store menu
             const stockSavedState = localStorage.getItem('stockMenuCollapsed');
             if (stockSavedState === 'true') {
                 const stockMenu = document.getElementById('stockMenu');

@@ -30,6 +30,10 @@
             <div style="font-weight: 600; color: #111827;">{{ $materialInward->supplier->supplier_name ?? '-' }}</div>
         </div>
         <div>
+            <div style="font-size: 13px; color: #6b7280;">Purchase Order</div>
+            <div style="font-weight: 600; color: #111827;">{{ $materialInward->purchaseOrder->po_number ?? '-' }}</div>
+        </div>
+        <div>
             <div style="font-size: 13px; color: #6b7280;">Total Amount</div>
             <div style="font-weight: 600; color: #111827;">{{ number_format($materialInward->total_amount, 2) }}</div>
         </div>
@@ -55,7 +59,7 @@
                             {{ $item->rawMaterial->raw_material_name ?? '-' }}
                         </td>
                         <td style="padding: 8px; text-align: right; color: #111827;">
-                            {{ number_format($item->quantity_received, 3) }}
+                            {{ number_format($item->quantity_received, 0) }}
                         </td>
                         <td style="padding: 8px; color: #111827;">
                             {{ $item->unit_of_measure }}

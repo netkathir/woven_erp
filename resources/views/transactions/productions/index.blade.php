@@ -61,13 +61,13 @@
                                 {{ $production->product->product_name ?? '-' }}
                             </td>
                             <td style="padding: 12px; color: #333; text-align: right;">
-                                {{ number_format($production->produced_quantity, 3) }}
+                                {{ number_format($production->produced_quantity, 0) }}
                             </td>
                             <td style="padding: 12px; color: #333; text-align: right;">
-                                {{ number_format($production->weight_per_unit, 3) }}
+                                {{ number_format($production->weight_per_unit, 2) }}
                             </td>
                             <td style="padding: 12px; color: #333; text-align: right;">
-                                {{ number_format($production->total_weight, 3) }}
+                                {{ number_format($production->total_weight, 0) }}
                             </td>
                             <td style="padding: 12px; text-align: center;">
                                 <div style="display: flex; gap: 8px; justify-content: center;">
@@ -98,9 +98,7 @@
             </table>
         </div>
 
-        <div style="margin-top: 20px;">
-            {{ $productions->links() }}
-        </div>
+        @include('partials.pagination', ['paginator' => $productions, 'routeUrl' => route('productions.index')])
     @else
         <div style="text-align: center; padding: 40px; color: #666;">
             <p style="font-size: 18px; margin-bottom: 20px;">No production entries found.</p>
