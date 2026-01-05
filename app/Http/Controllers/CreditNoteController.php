@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Product;
 use App\Models\SalesInvoice;
 use App\Models\PurchaseOrder;
+use App\Models\MaterialInward;
 use App\Models\CompanyInformation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -432,7 +433,7 @@ class CreditNoteController extends Controller
                     ->toArray();
                 break;
             case 'Purchase Invoice':
-                $query = PurchaseOrder::select('id', 'po_number');
+                $query = MaterialInward::select('id', 'inward_number', 'received_date');
                 
                 // Filter by branch if active branch is set
                 if ($activeBranchId) {
@@ -444,12 +445,14 @@ class CreditNoteController extends Controller
                     $query->where('organization_id', $organizationId);
                 }
                 
-                $documents = $query->orderBy('po_number')
+                $documents = $query->orderByDesc('received_date')
+                    ->orderBy('inward_number')
                     ->get()
                     ->map(function ($doc) {
                         return [
                             'id' => $doc->id,
-                            'number' => $doc->po_number,
+                            'number' => $doc->inward_number,
+                            'date' => $doc->received_date ? $doc->received_date->format('Y-m-d') : '',
                         ];
                     })
                     ->values()
@@ -492,15 +495,15 @@ class CreditNoteController extends Controller
                 }
                 break;
             case 'Purchase Invoice':
-                $purchaseOrder = PurchaseOrder::with(['supplier', 'items.rawMaterial'])->find($id);
-                if ($purchaseOrder) {
+                $materialInward = MaterialInward::with(['supplier', 'items.rawMaterial'])->find($id);
+                if ($materialInward) {
                     $details = [
                         'party_type' => 'Supplier',
-                        'party_id' => $purchaseOrder->supplier_id,
-                        'party_name' => $purchaseOrder->supplier->supplier_name ?? null,
-                        'gst_number' => $purchaseOrder->supplier->gst_number ?? null,
+                        'party_id' => $materialInward->supplier_id,
+                        'party_name' => $materialInward->supplier->supplier_name ?? null,
+                        'gst_number' => $materialInward->supplier->gst_number ?? null,
                         'currency' => 'INR',
-                        'items' => $purchaseOrder->items->map(function ($item) {
+                        'items' => $materialInward->items->map(function ($item) {
                             // Check if rawMaterial exists before accessing its properties
                             if (!$item->rawMaterial) {
                                 return null;
@@ -509,7 +512,7 @@ class CreditNoteController extends Controller
                                 'product_id' => null, // Raw materials are not products, so set to null
                                 'item_name' => $item->rawMaterial->raw_material_name ?? null,
                                 'description' => '',
-                                'quantity' => $item->quantity ?? 0,
+                                'quantity' => $item->quantity_received ?? 0,
                                 'unit_of_measure' => $item->rawMaterial->unit_of_measure ?? null,
                                 'rate' => $item->unit_price ?? 0,
                             ];

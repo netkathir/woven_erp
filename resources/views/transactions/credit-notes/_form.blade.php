@@ -30,10 +30,8 @@
         <label for="reference_document_type" style="display: block; margin-bottom: 6px; font-weight: 600; color: #333;">Reference Document Type</label>
         <select name="reference_document_type" id="reference_document_type"
                 style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
-            <option value="Manual" {{ old('reference_document_type', $editing ? $creditNote->reference_document_type : 'Manual') == 'Manual' ? 'selected' : '' }}>Manual</option>
             <option value="Purchase Invoice" {{ old('reference_document_type', $editing ? $creditNote->reference_document_type : '') == 'Purchase Invoice' ? 'selected' : '' }}>Purchase Invoice</option>
             <option value="Sales Invoice" {{ old('reference_document_type', $editing ? $creditNote->reference_document_type : '') == 'Sales Invoice' ? 'selected' : '' }}>Sales Invoice</option>
-            <option value="Dispatch" {{ old('reference_document_type', $editing ? $creditNote->reference_document_type : '') == 'Dispatch' ? 'selected' : '' }}>Dispatch</option>
         </select>
         @error('reference_document_type')
             <div style="color: red; font-size: 13px; margin-top: 4px;">{{ $message }}</div>
@@ -306,9 +304,9 @@
          // Don't call updateItemDropdowns on page load - only when reference document is selected
          
          // If editing and reference document type is set, ensure container is visible and load items
-         @if($editing && isset($creditNote) && $creditNote->reference_document_type && $creditNote->reference_document_type !== 'Manual')
+         @if($editing && isset($creditNote) && $creditNote->reference_document_type)
              const refType = document.getElementById('reference_document_type').value;
-             if (refType && refType !== 'Manual') {
+             if (refType) {
                  document.getElementById('reference_document_number_container').style.display = 'block';
                 // Reference document number is stored in hidden field
                 
@@ -420,7 +418,7 @@
         clearAutoPopulatedFields();
         updateReferenceDocumentVisibility();
         loadReferenceDocuments();
-        if (this.value !== 'Manual') {
+        if (this.value) {
             document.getElementById('party_type').disabled = true;
             document.getElementById('party_id').disabled = true;
         } else {
@@ -504,7 +502,7 @@
     function updateReferenceDocumentVisibility() {
         const refType = document.getElementById('reference_document_type').value;
         const container = document.getElementById('reference_document_number_container');
-        if (refType && refType !== 'Manual') {
+        if (refType) {
             container.style.display = 'block';
         } else {
             container.style.display = 'none';
@@ -518,7 +516,7 @@
         const partyTypeField = document.getElementById('party_type');
         const partyIdField = document.getElementById('party_id');
         
-        if (refType && refType !== 'Manual') {
+        if (refType) {
             partyTypeField.disabled = true;
             partyIdField.disabled = true;
         } else {
@@ -575,7 +573,7 @@
         const type = document.getElementById('reference_document_type').value;
         const select = document.getElementById('reference_document_id');
         
-        if (!type || type === 'Manual') {
+        if (!type) {
             select.innerHTML = '<option value="">-- Select Document --</option>';
             document.getElementById('reference_document_number').value = '';
             return;
@@ -654,7 +652,7 @@
         const type = document.getElementById('reference_document_type').value;
         const id = document.getElementById('reference_document_id').value;
         
-        if (!type || !id || type === 'Manual') {
+        if (!type || !id) {
             console.log('Skipping loadReferenceDocumentDetails - type:', type, 'id:', id);
             return;
         }
