@@ -428,12 +428,14 @@
                 tableHTML += '<thead><tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">';
                 tableHTML += '<th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Transaction Date</th>';
                 tableHTML += '<th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Amount</th>';
+                tableHTML += '<th style="padding: 12px; text-align: center; color: #333; font-weight: 600;">Payment Method</th>';
                 tableHTML += '</tr></thead><tbody>';
                 
                 data.transactions.forEach(function(transaction) {
                     tableHTML += '<tr style="border-bottom: 1px solid #dee2e6;">';
                     tableHTML += '<td style="padding: 12px; color: #333;">' + transaction.payment_date_formatted + '</td>';
                     tableHTML += '<td style="padding: 12px; text-align: right; color: #333; font-weight: 500;">₹' + transaction.payment_amount + '</td>';
+                    tableHTML += '<td style="padding: 12px; text-align: center; color: #333;">' + (transaction.payment_method || 'N/A') + '</td>';
                     tableHTML += '</tr>';
                 });
                 

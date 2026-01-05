@@ -44,9 +44,6 @@
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">S.No</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Customer</th>
                         <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Invoice Number</th>
-                        <th style="padding: 12px; text-align: left; color: #333; font-weight: 600;">Payment Date</th>
-                        <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Payment Amount</th>
-                        <th style="padding: 12px; text-align: center; color: #333; font-weight: 600;">Payment Method</th>
                         <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Invoice Total</th>
                         <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Total Paid</th>
                         <th style="padding: 12px; text-align: right; color: #333; font-weight: 600;">Balance</th>
@@ -59,9 +56,6 @@
                             <td style="padding: 12px; color: #333;">{{ $paymentTrackings->firstItem() + $index }}</td>
                             <td style="padding: 12px; color: #333;">{{ $payment->customer->customer_name ?? 'N/A' }}</td>
                             <td style="padding: 12px; color: #333;">{{ $payment->salesInvoice->invoice_number ?? 'N/A' }}</td>
-                            <td style="padding: 12px; color: #333;">{{ $payment->payment_date->format('d M Y') }}</td>
-                            <td style="padding: 12px; text-align: right; color: #333; font-weight: 500;">₹{{ number_format($payment->payment_amount, 2) }}</td>
-                            <td style="padding: 12px; text-align: center; color: #333;">{{ $payment->payment_method }}</td>
                             <td style="padding: 12px; text-align: right; color: #333; font-weight: 500;">₹{{ number_format($payment->invoice_total ?? 0, 2) }}</td>
                             <td style="padding: 12px; text-align: right; color: #333; font-weight: 500;">₹{{ number_format($payment->total_paid ?? 0, 2) }}</td>
                             <td style="padding: 12px; text-align: right; color: {{ ($payment->balance ?? 0) > 0 ? '#dc3545' : '#28a745' }}; font-weight: 600;">₹{{ number_format($payment->balance ?? 0, 2) }}</td>

@@ -314,6 +314,7 @@ class PaymentTrackingController extends Controller
                         'payment_date_formatted' => $payment->payment_date ? $payment->payment_date->format('d M Y') : '',
                         'payment_amount' => number_format($payment->payment_amount, 2),
                         'payment_amount_raw' => $payment->payment_amount,
+                        'payment_method' => $payment->payment_method ?? 'N/A',
                     ];
                 });
 
